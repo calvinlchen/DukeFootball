@@ -14,6 +14,8 @@ library(tidymodels)
 
 ```
 
+# Home Game Attendance
+
 ```{r}
 #| label: load-data
 
@@ -29,6 +31,8 @@ home_attendance_data <- attendance_data |>
 home_attendance_data
 
 ```
+
+## Time of Day
 
 ```{r}
 #| label: time-of-day-models
@@ -58,6 +62,8 @@ glance(time_glm)$AIC
 
 ```
 
+## Time of Day, Win Chance
+
 ```{r}
 #| label: time-of-day-AND-win-chance
 
@@ -85,6 +91,8 @@ glance(time_winpred_int_glm)$AIC
 
 ```
 
+## Time of Day, Win Chance, Day of Week
+
 ```{r}
 #| label: day-of-week-included
 
@@ -106,6 +114,8 @@ tidy(time_winpred_day_glm)
 glance(time_winpred_day_glm)$AIC
 
 ```
+
+## Time of Day, Win Chance, School Break {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
 
 ```{r}
 #| label: student-classes-break
@@ -134,6 +144,8 @@ glance(time_winpred_break_add_glm)$AIC
 
 ```
 
+## Time of Day, Win Chance, Gameday Rain {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+
 ```{r}
 #| label: rain-during-gameday
 
@@ -160,6 +172,8 @@ glance(time_winpred_rain_int_glm)$AIC
 glance(time_winpred_rain_add_glm)$AIC
 
 ```
+
+## Time of Day, Win Chance, UNC {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
 
 ```{r}
 #| label: playing-against-UNC
@@ -188,6 +202,8 @@ glance(time_winpred_UNC_add_glm)$AIC
 
 ```
 
+## Time of Day, Win Chance, TV Coverage {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+
 ```{r}
 #| label: TV-coverage
 
@@ -214,6 +230,8 @@ glance(time_winpred_TV_int_glm)$AIC
 glance(time_winpred_TV_add_glm)$AIC
 
 ```
+
+## Best Models So Far {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
 
 ```{r}
 #| label: best-models-so-far
@@ -285,3 +303,147 @@ ESPN3 =
 0 & \text{else}
 \end{cases}\\
 $$
+
+## Time of Day, Win Chance, Month {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+
+```{r}
+#| label: month-of-game
+
+home_attendance_data |>
+  mutate(Month = as.factor(Month)) |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum, color = Month)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) #+
+  #scale_colour_viridis_c()
+
+home_attendance_data |>
+  mutate(Month = as.factor(Month)) |>
+  ggplot(
+    aes(x = Month, y = AttNum, color = FPI)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(color = "FPI (lower = easier)") #+
+  #scale_colour_viridis_c()
+
+time_winpred_month_int_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) * Month + ESPN_WinPred, data = home_attendance_data)
+
+time_winpred_month_add_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) + Month + ESPN_WinPred, data = home_attendance_data)
+
+tidy(time_winpred_month_int_glm)
+tidy(time_winpred_month_add_glm)
+
+glance(time_winpred_month_int_glm)$AIC
+glance(time_winpred_month_add_glm)$AIC
+
+
+```
+
+## Time of Day, Win Chance, **Opponent Difficulty (via FPI)** {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+
+```{r}
+#| label: opponent-difficulty
+
+home_attendance_data |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE, color = "orange") #+
+  #scale_colour_viridis_c()
+
+home_attendance_data |>
+  ggplot(
+    aes(x = FPI_diff, y = AttNum, color = ESPN_WinPred)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+
+#FPI only
+fpi_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ FPI_diff, data = home_attendance_data)
+
+#tidy(fpi_lm)
+glance(fpi_lm)$AIC #[1]
+
+#FPI and ESPN_WinPred
+fpi_winpred_int_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ FPI_diff * ESPN_WinPred, data = home_attendance_data)
+
+fpi_winpred_add_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ FPI_diff + ESPN_WinPred, data = home_attendance_data)
+
+#tidy(fpi_winpred_int_lm)
+#tidy(fpi_winpred_add_lm)
+
+glance(fpi_winpred_int_lm)$AIC #[2]
+glance(fpi_winpred_add_lm)$AIC #[3]
+
+#FPI and Time
+fpi_time_int_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ FPI_diff * Start_Time, data = home_attendance_data)
+
+fpi_time_add_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ FPI_diff + Start_Time, data = home_attendance_data)
+
+#tidy(fpi_time_int_lm)
+#tidy(fpi_time_add_lm)
+
+glance(fpi_time_int_lm)$AIC #[4]
+glance(fpi_time_add_lm)$AIC #[5]
+
+
+#Time, ESPN_WinPred, and FPI
+time_winpred_fpi_int_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) * FPI_diff + ESPN_WinPred, data = home_attendance_data)
+
+time_winpred_fpi_add_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) + FPI_diff + ESPN_WinPred, data = home_attendance_data)
+
+glance(time_winpred_fpi_int_glm)$AIC #[6]
+glance(time_winpred_fpi_add_glm)$AIC #[7]
+
+
+#Time, ESPN_WinPred, TV, and FPI
+time_winpred_TV_fpi_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) * TV_Coverage + FPI_diff * ESPN_WinPred, data = home_attendance_data)
+
+glance(time_winpred_TV_fpi_glm)$AIC #[8]
+
+```
+
+## B**est FPI Model** {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+
+```{r}
+#| label: new-best-models
+
+tidy(time_winpred_fpi_int_glm)
+glance(time_winpred_fpi_int_glm)$AIC
+
+```
+
+$$
+\widehat{AttNum} = 27119 + 0.0000354*e^{(Start\_Time)} - 466.638(FPI\_diff) - 17156*(ESPN\_WinPred) + 0.00000321*(FPI\_diff)*e^{(Start\_Time)}
+$$
+
+\*\*The further past 12 PM (earliest) that a game starts, the *more* people are predicted to attend. (very likely claim)\*\*
+
+When the opponent has a greater Power Index rating, somewhat *less* people are predicted to attend. (uncertain claim)
+
+The more greatly Duke is predicted to win by ESPN, the *less* people are predicted to attend. (somewhat uncertain claim)
+
+Start time and opponent Power Index rating are likely *not* independent variables.
