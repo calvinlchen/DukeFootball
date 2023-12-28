@@ -1,0 +1,168 @@
+---
+title: "Duke Defensive Stats 2023"
+format: pdf
+editor: visual
+---
+
+## Packages
+
+```{r}
+#| label: load-packages
+
+library(tidyverse)
+library(tidymodels)
+
+```
+
+```{r}
+#| label: load-data
+
+duke_stats <- read_csv("data/Duke Defense Stats - DukeData.csv")
+
+duke_stats <- duke_stats |>
+  mutate(isHome = if_else(Site == "Home", TRUE, FALSE))
+
+duke_stats
+
+```
+```{r}
+#| label: scatter-plots
+
+duke_stats |>
+  filter(Type == "Interceptions") |>
+  ggplot(
+    aes(x = FPI_diff, y = Count)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Total Interceptions per Game",
+       x = "FPI Difference (higher = Duke less favored)",
+       y = "Number of Interceptions")
+
+duke_stats |>
+  filter(Type == "Tackles_Total") |>
+  ggplot(
+    aes(x = FPI_diff, y = Count)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Total Tackles per Game",
+       x = "FPI Difference (higher = Duke less favored)",
+       y = "Number of Tackles")
+
+duke_stats |>
+  filter(Type == "Tackles_for_Loss") |>
+  ggplot(
+    aes(x = FPI_diff, y = Yards, color = Count)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Tackles For Loss per Game",
+       x = "FPI Difference (higher = Duke less favored)",
+       y = "Yards Lost (Opponent)",
+       color = "Number of Tackles for Loss")
+
+duke_stats |>
+  filter(Type == "Sacks") |>
+  ggplot(
+    aes(x = FPI_diff, y = Count)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Total Sacks per Game",
+       x = "FPI Difference (higher = Duke less favored)",
+       y = "Number of Sacks")
+
+duke_stats |>
+  filter(Type == "Passes_Broken") |>
+  ggplot(
+    aes(x = FPI_diff, y = Count)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Total Passes Broken per Game",
+       x = "FPI Difference (higher = Duke less favored)",
+       y = "Number of Passes Broken")
+
+duke_stats |>
+  filter(Type == "QB_Hurries") |>
+  ggplot(
+    aes(x = FPI_diff, y = Count)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Total QB Hurries per Game",
+       x = "FPI Difference (higher = Duke less favored)",
+       y = "Number of QB Hurries Forced")
+
+duke_stats |>
+  filter(Type == "Fumbles_Forced") |>
+  ggplot(
+    aes(x = FPI_diff, y = Count)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Total Fumbles Forced per Game",
+       x = "FPI Difference (higher = Duke less favored)",
+       y = "Number of Fumbles Forced")
+
+duke_stats |>
+  filter(Type == "Kicks_Punts_Blocked") |>
+  ggplot(
+    aes(x = FPI_diff, y = Count)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Total Kicks/Punts Blocked per Game",
+       x = "FPI Difference (higher = Duke less favored)",
+       y = "Number of Kicks/Punts Blocked")
+
+duke_stats |>
+  filter(Type == "Opp_Penalties") |>
+  ggplot(
+    aes(x = FPI_diff, y = Yards, color = Count)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(title = "Opponent Penalty Yards per Game",
+       x = "FPI Difference (higher = Duke less favored)",
+       y = "Number of Opponent Penalty Yards",
+       color = "Number of Opponent Penalties")
+
+```
+
+```{r}
+#| label: tackles-for-loss-models
+
+duke_tackles_for_loss_stats <- duke_stats |>
+  filter(Type == "Tackles_for_Loss")
+
+tacklesforloss_model <- linear_reg() |>
+  set_engine("lm") |>
+  fit(Count ~ FPI_diff, data = duke_tackles_for_loss_stats)
+
+tacklesforloss_addmodel <- linear_reg() |>
+  set_engine("lm") |>
+  fit(Count ~ FPI_diff + isHome, data = duke_tackles_for_loss_stats)
+
+tacklesforloss_intmodel <- linear_reg() |>
+  set_engine("lm") |>
+  fit(Count ~ FPI_diff * isHome, data = duke_tackles_for_loss_stats)
+
+tidy(tacklesforloss_model)
+tidy(tacklesforloss_addmodel)
+tidy(tacklesforloss_intmodel)
+
+glance(tacklesforloss_model)$adj.r.squared
+glance(tacklesforloss_addmodel)$adj.r.squared
+glance(tacklesforloss_addmodel)$adj.r.squared
+
+duke_tackles_for_loss_stats |>
+  ggplot(
+    aes(x = FPI_diff, y = Count, color = isHome)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+```
+
