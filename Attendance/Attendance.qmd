@@ -20,8 +20,268 @@ library(tidymodels)
 attendance_data <- read_csv("data/Duke Stats - DukeAttendance.csv")
 
 attendance_data <- attendance_data |>
-  mutate(isHome = if_else(Site == "Home", TRUE, FALSE))
+  mutate(isHome = if_else(Site == "Home", TRUE, FALSE)) |>
+  mutate(Day = as.factor(Day))
 
-attendance_data
+home_attendance_data <- attendance_data |>
+  filter(isHome == TRUE)
+
+home_attendance_data
 
 ```
+
+```{r}
+#| label: time-of-day-models
+
+home_attendance_data |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "gray") +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE, color = "orange") #+
+  #scale_colour_viridis_c()
+
+time_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Start_Time, data = home_attendance_data)
+
+time_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time), data = home_attendance_data)
+
+tidy(time_lm)
+tidy(time_glm)
+
+glance(time_lm)$AIC
+glance(time_glm)$AIC
+
+```
+
+```{r}
+#| label: time-of-day-AND-win-chance
+
+home_attendance_data |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum, color = ESPN_WinPred)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE, color = "orange") #+
+  #scale_colour_viridis_c()
+
+time_winpred_add_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) + ESPN_WinPred, data = home_attendance_data)
+
+time_winpred_int_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) * ESPN_WinPred, data = home_attendance_data)
+
+tidy(time_winpred_add_glm)
+tidy(time_winpred_int_glm)
+
+glance(time_winpred_add_glm)$AIC
+glance(time_winpred_int_glm)$AIC
+
+```
+
+```{r}
+#| label: day-of-week-included
+
+home_attendance_data |>
+  mutate(Day = fct_relevel(Day, "Mon", "Thu", "Fri", "Sat")) |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum, color = Day)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) #+
+  #scale_colour_viridis_c()
+
+time_winpred_day_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) + Day + ESPN_WinPred, data = home_attendance_data)
+
+tidy(time_winpred_day_glm)
+
+glance(time_winpred_day_glm)$AIC
+
+```
+
+```{r}
+#| label: student-classes-break
+
+home_attendance_data |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum, color = SchoolBreak)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) #+
+  #scale_colour_viridis_c()
+
+time_winpred_break_int_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) * SchoolBreak * ESPN_WinPred, data = home_attendance_data)
+
+time_winpred_break_add_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) + SchoolBreak * ESPN_WinPred, data = home_attendance_data)
+
+tidy(time_winpred_break_int_glm)
+tidy(time_winpred_break_add_glm)
+
+glance(time_winpred_break_int_glm)$AIC
+glance(time_winpred_break_add_glm)$AIC
+
+```
+
+```{r}
+#| label: rain-during-gameday
+
+home_attendance_data |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum, color = Rain)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) #+
+  #scale_colour_viridis_c()
+
+time_winpred_rain_int_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) * Rain + ESPN_WinPred, data = home_attendance_data)
+
+time_winpred_rain_add_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) + Rain + ESPN_WinPred, data = home_attendance_data)
+
+tidy(time_winpred_rain_int_glm)
+tidy(time_winpred_rain_add_glm)
+
+glance(time_winpred_rain_int_glm)$AIC
+glance(time_winpred_rain_add_glm)$AIC
+
+```
+
+```{r}
+#| label: playing-against-UNC
+
+home_attendance_data |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum, color = UNC_Game)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) #+
+  #scale_colour_viridis_c()
+
+time_winpred_UNC_int_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) * UNC_Game + ESPN_WinPred, data = home_attendance_data)
+
+time_winpred_UNC_add_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) + UNC_Game + ESPN_WinPred, data = home_attendance_data)
+
+tidy(time_winpred_UNC_int_glm)
+tidy(time_winpred_UNC_add_glm)
+
+glance(time_winpred_UNC_int_glm)$AIC
+glance(time_winpred_UNC_add_glm)$AIC
+
+```
+
+```{r}
+#| label: TV-coverage
+
+home_attendance_data |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum, color = TV_Coverage)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) #+
+  #scale_colour_viridis_c()
+
+time_winpred_TV_int_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) * TV_Coverage * ESPN_WinPred, data = home_attendance_data)
+
+time_winpred_TV_add_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(Start_Time) + TV_Coverage * ESPN_WinPred, data = home_attendance_data)
+
+tidy(time_winpred_TV_int_glm)
+tidy(time_winpred_TV_add_glm)
+
+glance(time_winpred_TV_int_glm)$AIC
+glance(time_winpred_TV_add_glm)$AIC
+
+```
+
+```{r}
+#| label: best-models-so-far
+
+tidy(time_winpred_add_glm)
+tidy(time_winpred_TV_int_glm)
+
+glance(time_winpred_add_glm)$AIC
+glance(time_winpred_TV_int_glm)$AIC
+
+home_attendance_data |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum, color = ESPN_WinPred)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE, color = "orange") #+
+  #scale_colour_viridis_c()
+
+home_attendance_data |>
+  ggplot(
+    aes(x = Start_Time, y = AttNum, color = TV_Coverage)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) #+
+  #scale_colour_viridis_c()
+
+```
+
+Model 1 (simpler):
+
+$$
+\widehat{AttNum} = 30285 + 0.0000276 * e^{(Start\_Time)} - 18051*(ESPN\_WinPred)
+$$
+
+The further past 12 PM (earliest) that a game starts, the *more* people are predicted to attend.
+
+The more likely it is that Duke will win, the *less* people are predicted to attend.
+
+Model 2 (better matches observed attendance):
+
+$$
+\widehat{AttNum} = 44002 + 0.0000047*e^{(Start\_Time)} - 25470*ACCN 
+\\- 21778*ACCNX - 46798*ESPN - 21442*ESPN3 
+\\- 2137*(ESPN\_WinPred) + 0.0000561*ACCN*e^{(Start\_Time)} + \\0.0001093*ESPN*e^{(Start\_Time)} - 0.0000449*(ESPN\_WinPred)*e^{(Start\_Time)}
+$$
+
+$$
+ACCN =
+\begin{cases}
+1 & \text{if broadcast on ACCN}\\
+0 & \text{else}
+\end{cases}\\
+\\
+ACCNX =
+\begin{cases}
+1 & \text{if broadcast on ACCNX}\\
+0 & \text{else}
+\end{cases}\\
+\\
+ESPN =
+\begin{cases}
+1 & \text{if broadcast on ESPN}\\
+0 & \text{else}
+\end{cases}\\
+\\
+ESPN3 =
+\begin{cases}
+1 & \text{if broadcast on ESPN3}\\
+0 & \text{else}
+\end{cases}\\
+$$
