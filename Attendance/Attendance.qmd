@@ -1,0 +1,27 @@
+---
+title: "Duke Attendance Stats 2022-23"
+format: pdf
+editor: visual
+---
+
+## Packages
+
+```{r}
+#| label: load-packages
+
+library(tidyverse)
+library(tidymodels)
+
+```
+
+```{r}
+#| label: load-data
+
+attendance_data <- read_csv("data/Duke Stats - DukeAttendance.csv")
+
+attendance_data <- attendance_data |>
+  mutate(isHome = if_else(Site == "Home", TRUE, FALSE))
+
+attendance_data
+
+```
