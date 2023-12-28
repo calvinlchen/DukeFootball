@@ -72,7 +72,12 @@ home_attendance_data |>
     aes(x = Start_Time, y = AttNum, color = ESPN_WinPred)
   ) +
   geom_point() +
-  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE, color = "orange") #+
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE, color = "orange") +
+  labs(title = "Start Time vs. Stadium Attendance",
+       subtitle = "Duke football games at Wallace Wade; 2022-23",
+       x = "Approx. Kickoff Time (24hr format)",
+       y = "Number of In-Person Attendees",
+       color = "Chance of Duke\nvictory, per ESPN") #+
   #scale_colour_viridis_c()
 
 time_winpred_add_glm <- linear_reg() |>
