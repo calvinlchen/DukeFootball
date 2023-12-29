@@ -7,6 +7,8 @@ editor: visual
 ## Packages
 
 ```{r}
+#| label: load-packages
+
 library(tidyverse)
 library(tidymodels)
 ```
@@ -201,7 +203,7 @@ Wallace Wade attendance was *not* a statistically significant predictor of passi
 
 # Punt Returns
 
-#### Attendance as a predictor of *average* *yards* returned per punt:
+#### Attendance as a predictor of *average* *yards* returned per punt return:
 
 ```{r}
 #| label: attendance-vs-punt-returns-avg-yards
@@ -235,7 +237,7 @@ glance(att_punt_ret_yd_glm)$AIC
 
 Wallace Wade attendance was *not* a statistically significant predictor of average punt return yardage per game in 2022-23.
 
-#### Attendance as a predictor of punt return *attempts per game*:
+#### Attendance as a predictor of punt return *attempts* per game:
 
 ```{r}
 #| label: attendance-vs-punt-returns-attempts
@@ -264,3 +266,206 @@ glance(att_punt_ret_attempts_glm)$AIC
 ```
 
 Wallace Wade attendance was *not* a statistically significant predictor of the number of punt return attempts per game in 2022-23.
+
+# Kickoff Returns
+
+#### Attendance as a predictor of *average* *yards* returned per kickoff return:
+
+```{r}
+#| label: attendance-vs-kickoff-returns-avg-yards
+
+# Dataset filtering
+home_off_kickoff_return_data <- home_offense_data |>
+  filter(Type == "Kickoff_Returns")
+
+# Visualization
+home_off_kickoff_return_data |>
+  ggplot(
+    aes(x = AttPct, y = AvgYd, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ x, se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Average Yards per Kickoff Return",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Avg. Yards per Kickoff Return (higher is better)",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_kickoff_ret_yd_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AvgYd ~ AttPct, data = home_off_kickoff_return_data)
+
+tidy(att_kickoff_ret_yd_glm)
+glance(att_kickoff_ret_yd_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the average yards returned per kickoff return attempt in 2022-23.
+
+#### Attendance as a predictor of kickoff return *attempts* per game:
+
+```{r}
+#| label: attendance-vs-kickoff-returns-attempts
+
+# Visualization
+home_off_kickoff_return_data |>
+  ggplot(
+    aes(x = AttPct, y = Attempts, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ log(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Kickoff Return Attempts",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Number of Kickoff Returns",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_kickoff_ret_attempts_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(Attempts ~ log(AttPct), data = home_off_kickoff_return_data)
+
+tidy(att_kickoff_ret_attempts_glm)
+glance(att_kickoff_ret_attempts_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the number of kickoff return attempts per game in 2022-23.
+
+# Punts
+
+#### Attendance as a predictor of *average* *yards* per punt:
+
+```{r}
+#| label: attendance-vs-punts-avg-yards
+
+# Dataset filtering
+home_off_punts_data <- home_offense_data |>
+  filter(Type == "Punts")
+
+# Visualization
+home_off_punts_data |>
+  ggplot(
+    aes(x = AttPct, y = AvgYd, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Average Yards per Punt",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Avg. Yards per Punt",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_punts_yd_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AvgYd ~ exp(AttPct), data = home_off_punts_data)
+
+tidy(att_punts_yd_glm)
+glance(att_punts_yd_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a strong predictor of the average yards punted per punt attempt in 2022-23.
+
+#### Attendance as a predictor of punting *attempts* per game:
+
+```{r}
+#| label: attendance-vs-punts-attempts
+
+# Visualization
+home_off_punts_data |>
+  ggplot(
+    aes(x = AttPct, y = Attempts, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ log(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Punting Attempts",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Number of Punts",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_punts_attempts_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(Attempts ~ log(AttPct), data = home_off_punts_data)
+
+tidy(att_punts_attempts_glm)
+glance(att_punts_attempts_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the number of punting attempts per game in 2022-23.
+
+# Kickoffs
+
+#### Attendance as a predictor of *average* *yards* per kickoff:
+
+```{r}
+#| label: attendance-vs-kickoffs-avg-yards
+
+# Dataset filtering
+home_off_kickoffs_data <- home_offense_data |>
+  filter(Type == "Kickoffs")
+
+# Visualization
+home_off_kickoffs_data |>
+  ggplot(
+    aes(x = AttPct, y = AvgYd, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ poly(x,2), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Average Yards per Kickoff",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Avg. Yards per Kickoff",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_kickoffs_yd_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AvgYd ~ poly(AttPct,2), data = home_off_kickoffs_data)
+
+tidy(att_kickoffs_yd_glm)
+glance(att_kickoffs_yd_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a strong predictor of the average yards kicked per kickoff attempt in 2022-23.
+
+#### Attendance as a predictor of *touchback percentage* per game:
+
+```{r}
+#| label: attendance-vs-kickoffs-touchback-pct
+
+# Visualization
+home_off_kickoffs_data |>
+  ggplot(
+    aes(x = AttPct, y = TouchbackPct, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ poly(x,2), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  scale_y_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Touchbacks per Game",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "% Touchbacks of all Kickoffs",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_kickoffs_touchback_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(TouchbackPct ~ poly(AttPct,2), data = home_off_kickoffs_data)
+
+tidy(att_kickoffs_touchback_glm)
+glance(att_kickoffs_touchback_glm)$AIC
+```
+
+Wallace Wade attendance is a statistically ***possible*** predictor of the percent of kickoff attempts that were touchbacks in 2022-23.
+
+# Field Goals
+
+#### Attendance as a predictor of *successful* 3-point field goal average per game:
