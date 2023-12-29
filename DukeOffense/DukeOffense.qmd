@@ -489,7 +489,7 @@ home_off_fg_data |>
   labs(title = "Stadium Attendance vs. 3-Pt. Field Goal Percentage",
        subtitle = "Duke Home-Field Football Games, 2022-23",
        x = "Percentage of Stadium Capacity Filled",
-       y = "% of Field Goal Attempts that are Successful",
+       y = "% of Field Goal Attempts that were Successful",
        color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
 
 # Linear model
@@ -501,7 +501,7 @@ tidy(att_fg_comp_pct_glm)
 glance(att_fg_comp_pct_glm)$AIC
 ```
 
-Based on Duke football games in Wallace Wade during 2022-23, there ***is*** significant evidence that when football attendance is 100% or very close to 100%, the predicted 3-pt. field goals percentage decreases dramatically.
+Based on Duke football games in Wallace Wade during 2022-23, there ***is*** significant evidence to suggest that when football attendance is 100% or very close to 100%, the predicted 3-pt. field goals percentage decreases dramatically.
 
 #### Attendance as a predictor of the number of 3-pt. field goals *attempted* per game:
 
@@ -628,3 +628,305 @@ glance(att_total_attempts_glm)$AIC
 ```
 
 Wallace Wade attendance was *not* a statistically significant predictor of the number of offensive attempts per game in 2022-23.
+
+#### Attendance as a predictor of total *points scored* by *Duke* per game:
+
+```{r}
+#| label: attendance-vs-total-pts-duke
+
+# Visualization
+home_off_total_data |>
+  ggplot(
+    aes(x = AttPct, y = DukePts, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Duke Points Scored",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Number of Points Scored (by Duke)",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_total_pts_duke_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(DukePts ~ exp(AttPct), data = home_off_total_data)
+
+tidy(att_total_pts_duke_glm)
+glance(att_total_pts_duke_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the number of points scored by Duke per game in 2022-23.
+
+#### Attendance as a predictor of total *points scored* by Duke's *opponent* per game:
+
+```{r}
+#| label: attendance-vs-total-pts-opp
+
+# Visualization
+home_off_total_data |>
+  ggplot(
+    aes(x = AttPct, y = OppPts, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ poly(x,2), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Opponent Points Scored",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Number of Points Scored (by Opponent)",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_total_pts_opp_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(OppPts ~ poly(AttPct,2), data = home_off_total_data)
+
+tidy(att_total_pts_opp_glm)
+glance(att_total_pts_opp_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the number of points scored by Duke's opponent per game in 2022-23.
+
+# 3rd Down Conversions
+
+#### Attendance as a predictor of successful 3rd-down conversion *percentage* per game:
+
+```{r}
+#| label: attendance-vs-3rd-conv-pct
+
+# Dataset filtering
+home_off_3rd_conv_data <- home_offense_data |>
+  filter(Type == "3rd_Down_Conv")
+
+# Visualization
+home_off_3rd_conv_data |>
+  ggplot(
+    aes(x = AttPct, y = CompPct, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ log(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  scale_y_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. 3rd-Down Conversion Percentage",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "% of Conversion Attempts that were Successful",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_3rd_conv_comp_pct_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(CompPct ~ log(AttPct), data = home_off_3rd_conv_data)
+
+tidy(att_3rd_conv_comp_pct_glm)
+glance(att_3rd_conv_comp_pct_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the percentage of 3rd-down conversion attempts that were successful per game in 2022-23.
+
+#### Attendance as a predictor of 3rd-down conversion *attempts* per game:
+
+```{r}
+#| label: attendance-vs-3rd-conv-attempts
+
+# Visualization
+home_off_3rd_conv_data |>
+  ggplot(
+    aes(x = AttPct, y = Attempts, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ log(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. 3rd-Down Conversion Attempts",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Number of Conversion Attempts",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_3rd_conv_attempts_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(Attempts ~ log(AttPct), data = home_off_3rd_conv_data)
+
+tidy(att_3rd_conv_attempts_glm)
+glance(att_3rd_conv_attempts_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the number of 3rd-down conversion attempts per game in 2022-23.
+
+# 4th Down Conversions
+
+#### Attendance as a predictor of successful 4rd-down conversion *percentage* per game:
+
+```{r}
+#| label: attendance-vs-4th-conv-pct
+
+# Dataset filtering
+home_off_4th_conv_data <- home_offense_data |>
+  filter(Type == "4th_Down_Conv")
+
+# Visualization
+home_off_4th_conv_data |>
+  ggplot(
+    aes(x = AttPct, y = CompPct, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ log(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  scale_y_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. 4th-Down Conversion Percentage",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "% of Conversion Attempts that were Successful",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_4th_comp_pct_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(CompPct ~ log(AttPct), data = home_off_4th_conv_data)
+
+tidy(att_4th_comp_pct_glm)
+glance(att_4th_comp_pct_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the percentage of 4th-down conversion attempts that were successful per game in 2022-23.
+
+#### Attendance as a predictor of 4th-down conversion *attempts* per game:
+
+```{r}
+#| label: attendance-vs-4th-conv-attempts
+
+# Visualization
+home_off_4th_conv_data |>
+  ggplot(
+    aes(x = AttPct, y = Attempts, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ log(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. 4th-Down Conversion Attempts",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Number of Conversion Attempts",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_4th_conv_attempts_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(Attempts ~ log(AttPct), data = home_off_4th_conv_data)
+
+tidy(att_4th_conv_attempts_glm)
+glance(att_4th_conv_attempts_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the number of 4th-down conversion attempts per game in 2022-23.
+
+# Red Zone Conversions
+
+#### Attendance as a predictor of successful red zone conversion *percentage* per game:
+
+```{r}
+#| label: attendance-vs-red-conv-pct
+
+# Dataset filtering
+home_off_red_conv_data <- home_offense_data |>
+  filter(Type == "Red_Zone_Conv")
+
+# Visualization
+home_off_red_conv_data |>
+  ggplot(
+    aes(x = AttPct, y = CompPct, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ poly(x,3), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  scale_y_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Red Zone Conversion Percentage",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "% of Conversion Attempts that were Successful",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_red_comp_pct_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(CompPct ~ poly(AttPct,3), data = home_off_red_conv_data)
+
+tidy(att_red_comp_pct_glm)
+glance(att_red_comp_pct_glm)$AIC
+```
+
+Based on Duke football games in Wallace Wade during 2022-23, there is *weak* evidence to suggest that red zone successful conversion percentage is associated with stadium attendance.
+
+#### Attendance as a predictor of the number of successful red zone *touchdown* conversions:
+
+```{r}
+#| label: attendance-vs-red-conv-touchdown
+
+# Visualization
+home_off_red_conv_data |>
+  ggplot(
+    aes(x = AttPct, y = TD_Gained, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ log(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  scale_y_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Red Zone Touchdown Conversions",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Number of Successful Touchdown Conversions",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_red_comp_touchdown_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(TD_Gained ~ log(AttPct), data = home_off_red_conv_data)
+
+tidy(att_red_comp_touchdown_glm)
+glance(att_red_comp_touchdown_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the number of successful red zone touchdown conversions in 2022-23.
+
+# Turnover Losses
+
+#### Attendance as a predictor of the number of turnover losses by Duke per game:
+
+```{r}
+#| label: attendance-vs-turnover-losses
+
+# Dataset filtering
+home_off_turnover_losses_data <- home_offense_data |>
+  filter(Type == "Turnover_Losses")
+
+# Visualization
+home_off_turnover_losses_data |>
+  ggplot(
+    aes(x = AttPct, y = Comp, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ log(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Turnover Losses",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Number of Turnover Losses (Int. + Fumbles)",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_turnover_losses_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(Comp ~ log(AttPct), data = home_off_turnover_losses_data)
+
+tidy(att_turnover_losses_glm)
+glance(att_turnover_losses_glm)$AIC
+```
+
+Wallace Wade attendance was not a *strong* predictor of the number of Duke turnover losses per game in 2022-23.
+
+# Summary
+
+On the whole, a relationship between stadium attendance at home and offensive performance did not appear to exist. The only truly significant finding was that, based on the data from 2022-23, when football attendance is 100% or very close to 100%, the predicted 3-point field goal success percentage decreases dramatically. This is likely due to factors other than the number of stadium attendees alone, such as the difficulty of the opponents at those games.
