@@ -2,9 +2,11 @@
 title: "Duke Attendance Stats 2022-23"
 format: pdf
 editor: visual
+messages: FALSE
+warnings: FALSE
 ---
 
-## Packages
+# Packages
 
 ```{r}
 #| label: load-packages
@@ -16,10 +18,12 @@ library(tidymodels)
 
 # Home Game Attendance
 
+## Import Data
+
 ```{r}
 #| label: load-data
 
-attendance_data <- read_csv("data/Duke Stats - DukeAttendance.csv")
+attendance_data <- read_csv("data/Duke Stats - DukeAttendanceV2.csv")
 
 attendance_data <- attendance_data |>
   mutate(isHome = if_else(Site == "Home", TRUE, FALSE)) |>
@@ -62,7 +66,7 @@ glance(time_glm)$AIC
 
 ```
 
-## Time of Day, Win Chance
+### + Win Chance
 
 ```{r}
 #| label: time-of-day-AND-win-chance
@@ -96,7 +100,7 @@ glance(time_winpred_int_glm)$AIC
 
 ```
 
-## Time of Day, Win Chance, Day of Week
+### + Win Chance + Day of Week
 
 ```{r}
 #| label: day-of-week-included
@@ -120,7 +124,7 @@ glance(time_winpred_day_glm)$AIC
 
 ```
 
-## Time of Day, Win Chance, School Break {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+### + Win Chance + School Break {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
 
 ```{r}
 #| label: student-classes-break
@@ -149,7 +153,7 @@ glance(time_winpred_break_add_glm)$AIC
 
 ```
 
-## Time of Day, Win Chance, Gameday Rain {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+### + Win Chance + Gameday Rain {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
 
 ```{r}
 #| label: rain-during-gameday
@@ -178,7 +182,7 @@ glance(time_winpred_rain_add_glm)$AIC
 
 ```
 
-## Time of Day, Win Chance, UNC {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+### + Win Chance + is UNC game {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
 
 ```{r}
 #| label: playing-against-UNC
@@ -207,7 +211,7 @@ glance(time_winpred_UNC_add_glm)$AIC
 
 ```
 
-## Time of Day, Win Chance, TV Coverage {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+### + Win Chance + Coverage {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
 
 ```{r}
 #| label: TV-coverage
@@ -238,6 +242,8 @@ glance(time_winpred_TV_add_glm)$AIC
 
 ## Best Models So Far {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
 
+### Code
+
 ```{r}
 #| label: best-models-so-far
 
@@ -265,17 +271,17 @@ home_attendance_data |>
 
 ```
 
-Model 1 (simpler):
+### Model 1 (simpler):
 
 $$
 \widehat{AttNum} = 30285 + 0.0000276 * e^{(Start\_Time)} - 18051*(ESPN\_WinPred)
 $$
 
-The further past 12 PM (earliest) that a game starts, the *more* people are predicted to attend.
+**The further past 12 PM (earliest) that a game starts, the *more* people are predicted to attend.** The evidence for this claim is strongly **statistically significant.**
 
-The more likely it is that Duke will win, the *less* people are predicted to attend.
+The more likely it is that Duke will win, the *less* people are predicted to attend. The evidence for this claim is only marginally significant.
 
-Model 2 (better matches observed attendance):
+### Model 2 (better matches observed attendance):
 
 $$
 \widehat{AttNum} = 44002 + 0.0000047*e^{(Start\_Time)} - 25470*ACCN 
@@ -309,7 +315,11 @@ ESPN3 =
 \end{cases}\\
 $$
 
-## Time of Day, Win Chance, Month {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+*Description of model 2 TBD.*
+
+## Time of Day (cont.) {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+
+### + Win Chance + Month
 
 ```{r}
 #| label: month-of-game
@@ -350,7 +360,7 @@ glance(time_winpred_month_add_glm)$AIC
 
 ```
 
-## Time of Day, Win Chance, **Opponent Difficulty (via FPI)** {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+### + Win Chance + **Opponent Difficulty (FPI comparison)** {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
 
 ```{r}
 #| label: opponent-difficulty
@@ -431,7 +441,7 @@ glance(time_winpred_TV_fpi_glm)$AIC #[8]
 
 ```
 
-## B**est FPI Model** {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
+## B**est Model Using FPI** {style="color: rgb(0, 0, 0); font-family: \"Lucida Sans\", \"DejaVu Sans\", \"Lucida Grande\", \"Segoe UI\", Verdana, Helvetica, sans-serif, serif; font-style: normal; font-variant-ligatures: none; font-variant-caps: normal; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; caret-color: rgb(0, 0, 0); white-space: break-spaces; background-color: rgb(255, 255, 255); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"}
 
 ```{r}
 #| label: new-best-models
@@ -442,13 +452,24 @@ glance(time_winpred_fpi_int_glm)$AIC
 ```
 
 $$
-\widehat{AttNum} = 27119 + 0.0000354*e^{(Start\_Time)} - 466.638(FPI\_diff) - 17156*(ESPN\_WinPred) + 0.00000321*(FPI\_diff)*e^{(Start\_Time)}
+\widehat{AttNum} = 27119 + 0.0000354*e^{(Start\_Time)} - 466.638(FPI\_diff)
+\\- 17156*(ESPN\_WinPred) + 0.00000321*(FPI\_diff)*e^{(Start\_Time)}
 $$
 
-\*\*The further past 12 PM (earliest) that a game starts, the *more* people are predicted to attend. (very likely claim)\*\*
+**The further past 12 PM (earliest) that a game starts, the *more* people are predicted to attend.** *(very likely)*
 
-When the opponent has a greater Power Index rating, somewhat *less* people are predicted to attend. (uncertain claim)
+When the opponent has a greater Power Index rating, somewhat *less* people are predicted to attend. *(uncertain claim)*
 
-The more greatly Duke is predicted to win by ESPN, the *less* people are predicted to attend. (somewhat uncertain claim)
+The more greatly Duke is predicted to win by ESPN, the *less* people are predicted to attend. *(somewhat uncertain claim)*
 
-Start time and opponent Power Index rating are likely *not* independent variables.
+Start time and opponent Football Power Index (FPI) rating are likely [*not*]{.underline} independent variables.
+
+## 1st Seed Quarterback
+
+### 2023 Season
+
+```{r}
+#| label: first-seed
+
+
+```
