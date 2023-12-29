@@ -562,3 +562,69 @@ glance(att_fg_comp_glm)$AIC
 ```
 
 Wallace Wade attendance was *not* a *strong* predictor of the number of 3-point field goals made per game in 2022-23. (However, there may be a slightly stronger, albiet still weak, association between FGs made & stadium attendance than the association between FGs attempted & stadium attendance.)
+
+# Total Offense
+
+#### Attendance as a predictor of *average* *yards* per offensive play:
+
+```{r}
+#| label: attendance-vs-total-avg-yards
+
+# Dataset filtering
+home_off_total_data <- home_offense_data |>
+  filter(Type == "Total_Offense")
+
+# Visualization
+home_off_total_data |>
+  ggplot(
+    aes(x = AttPct, y = AvgYd, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Average Yards per Offensive Play",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Avg. Yards per Play",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_total_yd_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AvgYd ~ exp(AttPct), data = home_off_total_data)
+
+tidy(att_total_yd_glm)
+glance(att_total_yd_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the average yards gained/lost per offensive play attempt in 2022-23.
+
+#### Attendance as a predictor of total offensive *attempts* per game:
+
+```{r}
+#| label: attendance-vs-total-attempts
+
+# Visualization
+home_off_total_data |>
+  ggplot(
+    aes(x = AttPct, y = Attempts, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ poly(x,2), se = FALSE) +
+  scale_x_continuous(labels = label_percent(scale = 1)) +
+  labs(title = "Stadium Attendance vs. Offensive Attempts",
+       subtitle = "Duke Home-Field Football Games, 2022-23",
+       x = "Percentage of Stadium Capacity Filled",
+       y = "Number of Offensive Attempts",
+       color = "FPI Difference\n(Higher = More\nDifficult Opponent)")
+
+# Linear model
+att_total_attempts_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(Attempts ~ poly(AttPct,2), data = home_off_total_data)
+
+tidy(att_total_attempts_glm)
+glance(att_total_attempts_glm)$AIC
+```
+
+Wallace Wade attendance was *not* a statistically significant predictor of the number of offensive attempts per game in 2022-23.
