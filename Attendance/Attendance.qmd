@@ -466,10 +466,207 @@ Start time and opponent Football Power Index (FPI) rating are likely [*not*]{.un
 
 ## 1st Seed Quarterback
 
-### 2023 Season
+### With and Without
 
 ```{r}
 #| label: first-seed
 
+# Data
+home_attendance_data_2023 <- home_attendance_data |>
+  filter(Year == 2023) |>
+  mutate(DateDecimal = Month + Date/31) |>
+  mutate(Month = as.factor(Month))
+
+# Visualization
+home_attendance_data_2023 |>
+  ggplot(
+    aes(x = `1stSeedQB`, y = AttNum, color = Month)
+  ) +
+  geom_point()
+
+# Hypothesis Test
+set.seed(12345)
+
+qb_null_dist <- home_attendance_data_2023 |>
+  specify(response = AttNum,
+          explanatory = `1stSeedQB`) |>
+  hypothesize(null = "independence") |>
+  generate(reps = 1000, type = "permute") |>
+  calculate(stat = "diff in means",
+            order = c("TRUE", "FALSE"))
+
+visualize(qb_null_dist)
+
+qb_null_dist |> 
+  get_confidence_interval(level = 0.90, type = "percentile") 
 
 ```
+
+Whether or not Riley Leonard started as quarterback in a game was *not* a statistically significant predictor of Duke home-game attendance in 2022-23.
+
+## Season-Relative Date
+
+### 2022-2023
+
+```{r}
+#| label: chronological-plot-all
+
+# Calculation of time variable
+home_attendance_data_chron <- home_attendance_data |>
+  mutate(DateDecimal = Month + Date/31)
+
+# Visualization
+home_attendance_data_chron |>
+  ggplot(
+    aes(x = DateDecimal, y = AttNum, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) +
+  labs(title = "Game Date vs. Attendance",
+       subtitle = "Duke Home Games; 2022-23")
+
+# Model
+date_att_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(DateDecimal), data = home_attendance_data_chron)
+
+tidy(date_att_glm)
+glance(date_att_glm)$AIC
+```
+
+The date on which a game took place relative to the season timeline was *not* a statistically significant predictor of Duke home-game attendance in 2022-23.
+
+### 2023 only
+
+```{r}
+#| label: chronological-plot-2023
+
+# Calculation of time variable
+home_attendance_data_chron_2023 <- home_attendance_data_chron |>
+  filter(Year == 2023)
+
+# Visualization
+home_attendance_data_chron_2023 |>
+  ggplot(
+    aes(x = DateDecimal, y = AttNum, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) +
+  labs(title = "Game Date vs. Attendance",
+       subtitle = "Duke Home Games; 2023")
+
+# Model
+date_att_glm <- linear_reg() |>
+  set_engine("glm") |>
+  fit(AttNum ~ exp(DateDecimal), data = home_attendance_data_chron_2023)
+
+tidy(date_att_glm)
+glance(date_att_glm)$AIC
+```
+
+The same is true when examining the 2023 season alone; the date on which a game took place relative to the season timeline was *not* a statistically significant predictor of Duke home-game attendance in 2023.
+
+## Following a Duke Loss
+
+### Undefeated Overall (in the Season)
+
+```{r}
+#| label: undefeated-all
+
+# Visualization
+home_attendance_data |>
+  ggplot(
+    aes(x = Undefeated_All, y = AttNum, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) +
+  labs(title = "Undefeated in the Season vs. Stadium Attendance",
+       subtitle = "Duke Home Games; 2022-23")
+
+# Hypothesis Test
+set.seed(12345)
+
+undefeated_all_null_dist <- home_attendance_data |>
+  specify(response = AttNum,
+          explanatory = Undefeated_All) |>
+  hypothesize(null = "independence") |>
+  generate(reps = 1000, type = "permute") |>
+  calculate(stat = "diff in means",
+            order = c("TRUE", "FALSE"))
+
+visualize(undefeated_all_null_dist)
+
+undefeated_all_null_dist |> 
+  get_confidence_interval(level = 0.90, type = "percentile") 
+
+```
+
+Whether or not Duke was undefeated in a season before a game was *not* a statistically significant predictor of Duke home-game attendance in 2022-23.
+
+### Undefeated at Home (in the Season)
+
+```{r}
+#| label: undefeated-home
+
+# Visualization
+home_attendance_data |>
+  ggplot(
+    aes(x = Undefeated_Home, y = AttNum, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) +
+  labs(title = "Undefeated at Home vs. Stadium Attendance",
+       subtitle = "Duke Home Games; 2022-23")
+
+# Hypothesis Test
+set.seed(12345)
+
+undefeated_home_null_dist <- home_attendance_data |>
+  specify(response = AttNum,
+          explanatory = Undefeated_Home) |>
+  hypothesize(null = "independence") |>
+  generate(reps = 1000, type = "permute") |>
+  calculate(stat = "diff in means",
+            order = c("TRUE", "FALSE"))
+
+visualize(undefeated_home_null_dist)
+
+undefeated_home_null_dist |> 
+  get_confidence_interval(level = 0.90, type = "percentile") 
+```
+
+Whether or not Duke was undefeated (during the season) on their home field was *not* a statistically significant predictor of Duke home-game attendance in 2022-23.
+
+### Games Directly After a Duke Loss
+
+```{r}
+#| label: game-after-loss
+
+# Visualization
+home_attendance_data |>
+  ggplot(
+    aes(x = Game_After_Loss, y = AttNum, color = FPI_diff)
+  ) +
+  geom_point() +
+  geom_smooth(method = "glm", formula = y ~ exp(x), se = FALSE) +
+  labs(title = "The Game After a Loss vs. Stadium Attendance",
+       subtitle = "Duke Home Games; 2022-23")
+
+# Hypothesis Test
+set.seed(12345)
+
+recent_defeat_null_dist <- home_attendance_data |>
+  specify(response = AttNum,
+          explanatory = Game_After_Loss) |>
+  hypothesize(null = "independence") |>
+  generate(reps = 1000, type = "permute") |>
+  calculate(stat = "diff in means",
+            order = c("TRUE", "FALSE"))
+
+visualize(recent_defeat_null_dist)
+
+recent_defeat_null_dist |> 
+  get_confidence_interval(level = 0.90, type = "percentile") 
+```
+
+Whether or not a game directly followed a Duke loss was *not* a statistically significant predictor of Duke home-game attendance in 2022-23.
