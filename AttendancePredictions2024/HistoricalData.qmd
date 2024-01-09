@@ -291,12 +291,12 @@ home_att_data_prevFPI |>
        x = "Opponent FPI (at end of previous season)",
        y = "Game Attendance (% of stadium capacity)")
 
-prev_fpi_glm <- linear_reg() |>
+prev_fpi_lm <- linear_reg() |>
   set_engine("lm") |>
   fit(AttPct ~ OppFPI_PrevYear, data = home_att_data_prevFPI)
 
-tidy(prev_fpi_glm)
-glance(prev_fpi_glm)$adj.r.squared
+tidy(prev_fpi_lm)
+glance(prev_fpi_lm)$adj.r.squared
 
 ```
 
@@ -313,12 +313,12 @@ The adjusted r-squared value of about 0.0347 is very low, indicating that while 
 #| message: false
 #| warning: false
 
-prev_fpi_diff_glm <- linear_reg() |>
+prev_fpi_diff_lm <- linear_reg() |>
   set_engine("lm") |>
   fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear, data = home_att_data_prevFPI)
 
-tidy(prev_fpi_diff_glm)
-glance(prev_fpi_diff_glm)$adj.r.squared
+tidy(prev_fpi_diff_lm)
+glance(prev_fpi_diff_lm)$adj.r.squared
 
 ```
 
@@ -326,6 +326,154 @@ When considering the FPI difference between Duke and its opponent in the previou
 
 Additionally, this model indicates that when the difference in previous-season FPI increases between Duke and its opponent increases (AKA when a matchup is more difficult for Duke based on the previous-season teams), stadium attendance decreases. However, the p-value for this is roughly 0.2183, suggesting that this trend may be due to chance rather than this association truly existing overall.
 
-The adjusted r-squared value of this model is higher than the previous, suggesting that when you consider the FPI difference in addition to the opponent team's FPI, the model better predicts variation in stadium attendance.
+The adjusted r-squared value of this model is higher than the previous, suggesting that when you consider the FPI difference in addition to the opponent team's FPI, the model better predicts variation in stadium attendance. Thus, we *will* be including the First_Home_Game variable in future models.
 
-## 
+## New Head Coach
+
+Duke has a new head coach in its 2024 season. Does home-game attendance seem to change during the first season a new head coach is present, based on data from 2011-2023?
+
+```{r}
+#| label: head-coach
+#| message: false
+#| warning: false
+
+prev_fpi_diff_coach_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + New_Coach,
+      data = home_att_data_prevFPI)
+
+tidy(prev_fpi_diff_coach_lm)
+glance(prev_fpi_diff_coach_lm)$adj.r.squared
+```
+
+The adjusted r-squared value of the model decreases when the coaching variable is introduced, and the p-values become less significant. This suggests that simply having a new head coach does *not* affect home-game attendance. Thus, we will not be including the New_Coach variable in future models.
+
+## First Home Game
+
+Does home-game attendance tend to differ when it is the first home game of the season?
+
+```{r}
+#| label: first-home
+#| message: false
+#| warning: false
+
+prev_fpi_diff_first_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + First_Home_Game,
+      data = home_att_data_prevFPI)
+
+tidy(prev_fpi_diff_first_lm)
+glance(prev_fpi_diff_first_lm)$adj.r.squared
+```
+
+The adjusted r-squared value of the model decreases when the First_Home_Game variable is introduced, and the p-values become less significant. This suggests that a game being the *first* home game does *not* affect stadium attendance. Thus, we will not be including the First_Home_Game variable in future models.
+
+## UNC Game
+
+Can a model better predict home-game attendance when it accounts for whether or not UNC is the opponent?
+
+```{r}
+#| label: unc-game
+#| message: false
+#| warning: false
+
+prev_fpi_diff_unc_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + UNC_Game,
+      data = home_att_data_prevFPI)
+
+tidy(prev_fpi_diff_unc_lm)
+glance(prev_fpi_diff_unc_lm)$adj.r.squared
+```
+
+While the p-values were improved in this model, the adjusted R-squared value decreased, suggesting that the inclusion of the UNC variable is unnecessary. However, this model is still worth noting, since it shows that the filled percentage of total stadium capacity typically increases by around 31.67 when a game is against UNC, and while this exact percentage can vary, this is a strongly statistically significant (p \< 0.001) trend.
+
+However, since the adjusted R-squared value of the model decreased as a result of adding the UNC variable, we will not be including the UNC variable it in future models.
+
+## Win History
+
+Does the previous recent winning record of a team matter for a game's attendance level?
+
+### Duke Undefeated Status
+
+The following models will investigate if whether Duke being undefeated in a season -- both undefeated at home and undefeated overall -- is related to stadium attendance:
+
+```{r}
+#| label: undefeated_home
+#| message: false
+#| warning: false
+
+prev_fpi_diff_undef_home_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + Undefeated_Home,
+      data = home_att_data_prevFPI)
+
+tidy(prev_fpi_diff_undef_home_lm)
+glance(prev_fpi_diff_undef_home_lm)$adj.r.squared
+```
+
+```{r}
+#| label: undefeated_overall
+#| message: false
+#| warning: false
+
+prev_fpi_diff_undef_overall_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + Undefeated_All,
+      data = home_att_data_prevFPI)
+
+tidy(prev_fpi_diff_undef_overall_lm)
+glance(prev_fpi_diff_undef_overall_lm)$adj.r.squared
+```
+
+When considering whether a team is undefeated overall, the result is not significant and results in a lower adjusted R-squared value for the model. However, whether a team is undefeated *at home* does improve the adjusted R-squared value of the model from 0.04277 to 0.04746. The model estimates that stadium attendance slightly *increases* when Duke is undefeated on its home field in a season, but this result is not statistically significant (p = 0.2558).
+
+### Duke Win Streak
+
+Does Duke being on a win streak affect stadium attendance?
+
+```{r}
+#| label: win-streak
+#| message: false
+#| warning: false
+
+prev_fpi_diff_streak_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear  + FPI_Diff_PrevYear + Win_Streak,
+      data = home_att_data_prevFPI)
+
+tidy(prev_fpi_diff_streak_lm)
+glance(prev_fpi_diff_streak_lm)$adj.r.squared
+```
+
+```{r}
+#| label: win-streak-no-diff
+#| message: false
+#| warning: false
+
+prev_fpi_streak_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear  +  Win_Streak,
+      data = home_att_data_prevFPI)
+
+tidy(prev_fpi_streak_lm)
+glance(prev_fpi_streak_lm)$adj.r.squared
+```
+
+Factoring in Duke's win streak greatly improves the predictive power of the model. In fact, when the FPI difference between Duke and its opponent is removed, the model becomes even more representative, as the adjusted R-squared value increases to 0.07876 and the p-value of both terms nears 0.05.
+
+This is a strong indication that Duke's win streak performance greatly affects stadium attendance. A visual representation of attendance based on win streak is shown below:
+
+```{r}
+#| label: win-streak-visual
+#| message: false
+#| warning: false
+
+home_att_data_prevFPI |>
+  mutate(Win_Streak = as.factor(Win_Streak)) |>
+  ggplot(aes(x = OppFPI_PrevYear, y = AttPct, color = Win_Streak)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", formula = y ~ x, se = FALSE, alpha = 0.5) +
+  facet_wrap(~ Win_Streak) +
+  theme_minimal()
+```
