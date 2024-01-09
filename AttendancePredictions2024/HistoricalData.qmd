@@ -1,0 +1,38 @@
+---
+title: "Predictions Based on 2011-2023 Home Attendance Records"
+format: pdf
+editor: visual
+messages: FALSE
+warnings: FALSE
+---
+
+This document seeks to utilize attendance records of Duke University home football games from the previous 12 seasons (2011-2023) to predict the number of attendees at Duke football home games during the 2024 season.
+
+# Packages
+
+```{r}
+#| label: load-packages
+
+library(tidyverse)
+library(tidymodels)
+
+```
+
+# Importing the Dataset
+
+```{r}
+#| label: load-data
+
+att_data <- read_csv("data/Duke Stats - DukeAttendanceV3.csv")
+
+att_data <- att_data |>
+  mutate(Day = as.factor(Day))
+
+home_att_data <- att_data |>
+  filter(Site == "Home")
+
+home_att_data
+
+```
+
+# Attendance History for 2024 Opponents
