@@ -259,3 +259,73 @@ home_att_data |>
        y = "Attendance (% of stadium capacity filled)",
        color = "Virginia\nTech's FPI")
 ```
+
+# Team Performance vs. Attendance
+
+Can football team performance -- both of Duke and its opponent -- be used to predict the attendance turnout of future Duke home games?
+
+## Previous-Season FPI
+
+This section will seek to determine if the Football Power Index (FPI) of an opposing team at the end of one season is a decent predictor of home-game audience turnout in the *following* season.
+
+```{r}
+#| label: prev-year-fpi
+#| message: false
+#| warning: false
+
+home_att_data_prevFPI <- home_att_data |>
+  filter(!is.na(OppFPI_PrevYear)) |>
+  mutate(OppFPI_PrevYear = OppFPI_PrevYear,
+         FPI_Diff_PrevYear = FPI_Diff_PrevYear)
+
+home_att_data_prevFPI |>
+  ggplot(
+    aes(x = OppFPI_PrevYear, y = AttPct, color = FPI_Diff_PrevYear)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  labs(title = "Previous-Season Opponent FPI vs. Current-Season Attendance,\n
+       per Season",
+       subtitle = "Duke University Football, Wallace Wade Stadium, 2011-2023",
+       color = "FPI Difference\nbetween Duke\nand opponent",
+       x = "Opponent FPI (at end of previous season)",
+       y = "Game Attendance (% of stadium capacity)")
+
+prev_fpi_glm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear, data = home_att_data_prevFPI)
+
+tidy(prev_fpi_glm)
+glance(prev_fpi_glm)$adj.r.squared
+
+```
+
+The scatterplot above shows a fairly weak yet positive correlation between home-game attendance and the FPI of the opponent at the end of the previous season.
+
+The linear model gives the slope of the linear fit depicted in the scatterplot. The model gives a slope of roughly 0.44497, which signifies that for every increase of 1 in the opponent's previous-season FPI, stadium attendance (as a percentage of Wallace Wade's total capacity) is predicted to increase by 0.44497% on average. The model indicates that this slope has a p-value of about 0.071, which is less than 0.1 and is significant given the difficulty of predicting future football attendance.
+
+The adjusted r-squared value of about 0.0347 is very low, indicating that while a positive correlation is likely between attendance and opponent previous-season FPI, attendance is likely to also be based on other factors.
+
+### Previous-Season FPI Difference Between Duke & Opponent
+
+```{r}
+#| label: prev-year-fpi-and-diff
+#| message: false
+#| warning: false
+
+prev_fpi_diff_glm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear, data = home_att_data_prevFPI)
+
+tidy(prev_fpi_diff_glm)
+glance(prev_fpi_diff_glm)$adj.r.squared
+
+```
+
+When considering the FPI difference between Duke and its opponent in the previous season to a game, this factor is best represented in the model as an additive variable. The model gives a slope of roughly 0.843, which signifies that for every increase of 1 in the opponent's previous-season FPI, stadium attendance (as a percentage of Wallace Wade's total capacity) is predicted to increase by 0.843% on average. This is greater than the previous model, and this slope is also more significant (p = 0.0394).
+
+Additionally, this model indicates that when the difference in previous-season FPI increases between Duke and its opponent increases (AKA when a matchup is more difficult for Duke based on the previous-season teams), stadium attendance decreases. However, the p-value for this is roughly 0.2183, suggesting that this trend may be due to chance rather than this association truly existing overall.
+
+The adjusted r-squared value of this model is higher than the previous, suggesting that when you consider the FPI difference in addition to the opponent team's FPI, the model better predicts variation in stadium attendance.
+
+## 
