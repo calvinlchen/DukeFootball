@@ -2,8 +2,6 @@
 title: "Predictions Based on 2011-2023 Home Attendance Records"
 format: pdf
 editor: visual
-messages: FALSE
-warnings: FALSE
 ---
 
 This document seeks to utilize attendance records of Duke University home football games from the previous 12 seasons (2011-2023) to predict the number of attendees at Duke football home games during the 2024 season.
@@ -12,6 +10,8 @@ This document seeks to utilize attendance records of Duke University home footba
 
 ```{r}
 #| label: load-packages
+#| message: false
+#| warning: false
 
 library(tidyverse)
 library(tidymodels)
@@ -22,6 +22,8 @@ library(tidymodels)
 
 ```{r}
 #| label: load-data
+#| message: false
+#| warning: false
 
 att_data <- read_csv("data/Duke Stats - DukeAttendanceV3.csv")
 
@@ -29,7 +31,7 @@ att_data <- att_data |>
   mutate(Day = as.factor(Day))
 
 home_att_data <- att_data |>
-  filter(Site == "Home")
+  filter(Site == "Home", Year < 2024)
 
 home_opp_list <- c("Elon", "Connecticut", "Florida St.",
               "North Carolina", "SMU", "Virginia Tech")
@@ -40,8 +42,18 @@ home_att_data
 
 # Attendance History for 2024 Opponents
 
+Wallace Wade Stadium capacity:
+
+-   [*Pre*]{.underline}*-rennovation:* 33,941 (1982--2015)
+
+-   [*Post*]{.underline}*-rennovation:* 40,004 (2016-present)
+
+## All Teams
+
 ```{r}
 #| label: 2024opp-past-attendance
+#| message: false
+#| warning: false
 
 home_att_data |>
   filter(OppName %in% home_opp_list) |>
@@ -75,36 +87,175 @@ home_att_data |>
 
 ```{r}
 #| label: elon-past-attendance
+#| message: false
+#| warning: false
 
 home_att_data |>
   filter(OppName == "Elon") |>
-  ggplot(
-    aes(x = Year, y = AttPct)
-  ) +
-  geom_point() +
-  labs(x = "Year",
-       y = "Attendance (% of stadium capacity filled)")
+  summarize("Name" = OppName,
+            "End-of-Season FPI" = OppFPI,
+            Month,
+            Date,
+            Year,
+            "# of Attendees" = AttNum,
+            "% of Stadium Capacity Filled" = AttPct)
 ```
 
 ## Connecticut
 
+```{r}
+#| label: uconn-past-attendance
+#| message: false
+#| warning: false
+
+home_att_data |>
+  filter(OppName == "Connecticut") |>
+  summarize("Name" = OppName,
+            "End-of-Season FPI" = OppFPI,
+            Month,
+            Date,
+            Year,
+            "# of Attendees" = AttNum,
+            "% of Stadium Capacity Filled" = AttPct)
+```
+
+UConn never faced against Duke in Wallace Wade Stadium from 2011 to 2023.
+
 ## Florida St.
+
+```{r}
+#| label: fsu-past-attendance
+#| message: false
+#| warning: false
+
+home_att_data |>
+  filter(OppName == "Florida St.") |>
+  summarize("Name" = OppName,
+            "End-of-Season FPI" = OppFPI,
+            Month,
+            Date,
+            Year,
+            "# of Attendees" = AttNum,
+            "% of Stadium Capacity Filled" = AttPct)
+```
 
 ## North Carolina
 
 ```{r}
 #| label: unc-past-attendance
+#| message: false
+#| warning: false
+
+home_att_data |>
+  filter(OppName == "North Carolina") |>
+  summarize("Name" = OppName,
+            "End-of-Season FPI" = OppFPI,
+            Month,
+            Date,
+            Year,
+            "# of Attendees" = AttNum,
+            "% of Stadium Capacity Filled" = AttPct)
 
 home_att_data |>
   filter(OppName == "North Carolina") |>
   ggplot(
-    aes(x = Year, y = AttPct)
+    aes(x = Year, y = AttPct, color = Rennovated)
   ) +
   geom_point() +
-  labs(x = "Year",
-       y = "Attendance (% of stadium capacity filled)")
+  scale_x_continuous(breaks = seq(from = 2012, to = 2023, by = 2)) +
+  labs(title = "Home-Game Attendance Against UNC",
+       subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
+       x = "Year",
+       y = "Attendance (% of stadium capacity filled)",
+       color = "Rennovated\nStadium")
+
+home_att_data |>
+  filter(OppName == "North Carolina") |>
+  ggplot(
+    aes(x = Year, y = AttNum, color = Rennovated)
+  ) +
+  geom_point() +
+  scale_x_continuous(breaks = seq(from = 2012, to = 2023, by = 2)) +
+  labs(title = "Home-Game Attendance Against UNC",
+       subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
+       x = "Year",
+       y = "Attendance (# of attendees)",
+       color = "Rennovated\nStadium")
 ```
 
 ## SMU
 
+```{r}
+#| label: smu-past-attendance
+#| message: false
+#| warning: false
+
+home_att_data |>
+  filter(OppName == "SMU") |>
+  summarize("Name" = OppName,
+            "End-of-Season FPI" = OppFPI,
+            Month,
+            Date,
+            Year,
+            "# of Attendees" = AttNum,
+            "% of Stadium Capacity Filled" = AttPct)
+```
+
+UConn never faced against Duke in Wallace Wade Stadium from 2011 to 2023.
+
 ## Virginia Tech
+
+```{r}
+#| label: vtech-past-attendance
+#| message: false
+#| warning: false
+
+home_att_data |>
+  filter(OppName == "Virginia Tech") |>
+  summarize("Name" = OppName,
+            "End-of-Season FPI" = OppFPI,
+            Month,
+            Date,
+            Year,
+            "# of Attendees" = AttNum,
+            "% of Stadium Capacity" = AttPct)
+
+home_att_data |>
+  filter(OppName == "Virginia Tech") |>
+  ggplot(
+    aes(x = Year, y = AttPct, color = Rennovated)
+  ) +
+  geom_point() +
+  scale_x_continuous(breaks = seq(from = 2011, to = 2023, by = 2)) +
+  labs(title = "Home-Game Attendance Against Virginia Tech",
+       subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
+       x = "Year",
+       y = "Attendance (% of stadium capacity filled)",
+       color = "Rennovated\nStadium")
+
+home_att_data |>
+  filter(OppName == "Virginia Tech") |>
+  ggplot(
+    aes(x = Year, y = AttNum, color = Rennovated)
+  ) +
+  geom_point() +
+  scale_x_continuous(breaks = seq(from = 2011, to = 2023, by = 2)) +
+  labs(title = "Home-Game Attendance Against Virginia Tech",
+       subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
+       x = "Year",
+       y = "Attendance (# of attendees)",
+       color = "Rennovated\nStadium")
+
+home_att_data |>
+  filter(OppName == "Virginia Tech") |>
+  ggplot(
+    aes(x = Year, y = AttPct, color = OppFPI)
+  ) +
+  geom_point() +
+  scale_x_continuous(breaks = seq(from = 2011, to = 2023, by = 2)) +
+  labs(title = "Home-Game Attendance Against Virginia Tech",
+       subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
+       x = "Year",
+       y = "Attendance (% of stadium capacity filled)",
+       color = "Virginia\nTech's FPI")
+```
