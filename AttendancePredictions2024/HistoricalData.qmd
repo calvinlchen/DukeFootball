@@ -20,6 +20,8 @@ library(tidymodels)
 
 # Importing the Dataset
 
+List of Duke football opponents at home (Wallace Wade Stadium) from 2011-2023:
+
 ```{r}
 #| label: load-data
 #| message: false
@@ -33,18 +35,32 @@ att_data <- att_data |>
 home_att_data <- att_data |>
   filter(Site == "Home", Year < 2024)
 
-home_opp_list <- c("Elon", "Connecticut", "Florida St.",
-              "North Carolina", "SMU", "Virginia Tech")
-
 home_att_data
 
 ```
 
-# Attendance History for 2024 Opponents
+List of Duke football opponents at home (Wallace Wade Stadium) in *2024:*
+
+```{r}
+#| label: opponents-list
+#| message: false
+#| warning: false
+
+
+att_data |>
+  filter(Site == "Home", Year == 2024) |>
+  summarize("Opponent Name" = OppName)
+  
+home_opp_list <- c("Elon", "Connecticut", "Florida St.",
+                   "North Carolina", "SMU", "Virginia Tech")
+
+```
+
+# Attendance History for 2024 Home Opponents
 
 Wallace Wade Stadium capacity:
 
--   [*Pre*]{.underline}*-rennovation:* 33,941 (1982--2015)
+-   [*Pre*]{.underline}*-rennovation:* 33,941 (1982-2015)
 
 -   [*Post*]{.underline}*-rennovation:* 40,004 (2016-present)
 
@@ -302,7 +318,7 @@ glance(prev_fpi_lm)$adj.r.squared
 
 The scatterplot above shows a fairly weak yet positive correlation between home-game attendance and the FPI of the opponent at the end of the previous season.
 
-The linear model gives the slope of the linear fit depicted in the scatterplot. The model gives a slope of roughly 0.44497, which signifies that for every increase of 1 in the opponent's previous-season FPI, stadium attendance (as a percentage of Wallace Wade's total capacity) is predicted to increase by 0.44497% on average. The model indicates that this slope has a p-value of about 0.071, which is less than 0.1 and is significant given the difficulty of predicting future football attendance.
+The linear model gives the slope of the linear fit depicted in the scatterplot. The model gives a slope of roughly 0.44497, which signifies that for every 1-point increase in the opponent's previous-season FPI, stadium attendance (as a percentage of Wallace Wade's total capacity) is predicted to increase by 0.44497% on average. The model indicates that this slope has a p-value of about 0.071, which is less than 0.1 and is significant given the difficulty of predicting future football attendance.
 
 The adjusted r-squared value of about 0.0347 is very low, indicating that while a positive correlation is likely between attendance and opponent previous-season FPI, attendance is likely to also be based on other factors.
 
@@ -322,73 +338,11 @@ glance(prev_fpi_diff_lm)$adj.r.squared
 
 ```
 
-When considering the FPI difference between Duke and its opponent in the previous season to a game, this factor is best represented in the model as an additive variable. The model gives a slope of roughly 0.843, which signifies that for every increase of 1 in the opponent's previous-season FPI, stadium attendance (as a percentage of Wallace Wade's total capacity) is predicted to increase by 0.843% on average. This is greater than the previous model, and this slope is also more significant (p = 0.0394).
+When additively considering the FPI difference between Duke and its opponent at the end of the season *before* a game, the model gives a slope of roughly 0.843, which signifies that for every increase of 1 in the opponent's previous-season FPI, stadium attendance (as a percentage of Wallace Wade's total capacity) is predicted to increase by 0.843% on average. This is greater than the previous model, and this slope is also more significant (p = 0.0394).
 
 Additionally, this model indicates that when the difference in previous-season FPI increases between Duke and its opponent increases (AKA when a matchup is more difficult for Duke based on the previous-season teams), stadium attendance decreases. However, the p-value for this is roughly 0.2183, suggesting that this trend may be due to chance rather than this association truly existing overall.
 
 The adjusted r-squared value of this model is higher than the previous, suggesting that when you consider the FPI difference in addition to the opponent team's FPI, the model better predicts variation in stadium attendance. Thus, we *will* be including the First_Home_Game variable in future models.
-
-## New Head Coach
-
-Duke has a new head coach in its 2024 season. Does home-game attendance seem to change during the first season a new head coach is present, based on data from 2011-2023?
-
-```{r}
-#| label: head-coach
-#| message: false
-#| warning: false
-
-prev_fpi_diff_coach_lm <- linear_reg() |>
-  set_engine("lm") |>
-  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + New_Coach,
-      data = home_att_data_prevFPI)
-
-tidy(prev_fpi_diff_coach_lm)
-glance(prev_fpi_diff_coach_lm)$adj.r.squared
-```
-
-The adjusted r-squared value of the model decreases when the coaching variable is introduced, and the p-values become less significant. This suggests that simply having a new head coach does *not* affect home-game attendance. Thus, we will not be including the New_Coach variable in future models.
-
-## First Home Game
-
-Does home-game attendance tend to differ when it is the first home game of the season?
-
-```{r}
-#| label: first-home
-#| message: false
-#| warning: false
-
-prev_fpi_diff_first_lm <- linear_reg() |>
-  set_engine("lm") |>
-  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + First_Home_Game,
-      data = home_att_data_prevFPI)
-
-tidy(prev_fpi_diff_first_lm)
-glance(prev_fpi_diff_first_lm)$adj.r.squared
-```
-
-The adjusted r-squared value of the model decreases when the First_Home_Game variable is introduced, and the p-values become less significant. This suggests that a game being the *first* home game does *not* affect stadium attendance. Thus, we will not be including the First_Home_Game variable in future models.
-
-## UNC Game
-
-Can a model better predict home-game attendance when it accounts for whether or not UNC is the opponent?
-
-```{r}
-#| label: unc-game
-#| message: false
-#| warning: false
-
-prev_fpi_diff_unc_lm <- linear_reg() |>
-  set_engine("lm") |>
-  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + UNC_Game,
-      data = home_att_data_prevFPI)
-
-tidy(prev_fpi_diff_unc_lm)
-glance(prev_fpi_diff_unc_lm)$adj.r.squared
-```
-
-While the p-values were improved in this model, the adjusted R-squared value decreased, suggesting that the inclusion of the UNC variable is unnecessary. However, this model is still worth noting, since it shows that the filled percentage of total stadium capacity typically increases by around 31.67 when a game is against UNC, and while this exact percentage can vary, this is a strongly statistically significant (p \< 0.001) trend.
-
-However, since the adjusted R-squared value of the model decreased as a result of adding the UNC variable, we will not be including the UNC variable it in future models.
 
 ## Win History
 
@@ -477,3 +431,67 @@ home_att_data_prevFPI |>
   facet_wrap(~ Win_Streak) +
   theme_minimal()
 ```
+
+# Other Factors
+
+## New Head Coach
+
+Duke has a new head coach in its 2024 season. Does home-game attendance seem to change during the first season a new head coach is present, based on data from 2011-2023?
+
+```{r}
+#| label: head-coach 
+#| message: false 
+#| #| warning: false  
+
+prev_fpi_diff_coach_lm <- linear_reg() |>   
+  set_engine("lm") |>   
+  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + New_Coach,       
+      data = home_att_data_prevFPI)  
+
+tidy(prev_fpi_diff_coach_lm) 
+glance(prev_fpi_diff_coach_lm)$adj.r.squared
+```
+
+The adjusted r-squared value of the model decreases when the coaching variable is introduced, and the p-values become less significant. This suggests that simply having a new head coach does *not* affect home-game attendance. Thus, we will not be including the New_Coach variable in future models.
+
+## First Home Game
+
+Does home-game attendance tend to differ when it is the first home game of the season?
+
+```{r}
+#| label: first-home 
+#| #| message: false 
+#| #| warning: false  
+
+prev_fpi_diff_first_lm <- linear_reg() |>   
+  set_engine("lm") |>   
+  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + First_Home_Game,       
+      data = home_att_data_prevFPI)  
+
+tidy(prev_fpi_diff_first_lm) 
+glance(prev_fpi_diff_first_lm)$adj.r.squared
+```
+
+The adjusted r-squared value of the model decreases when the First_Home_Game variable is introduced, and the p-values become less significant. This suggests that a game being the *first* home game does *not* affect stadium attendance. Thus, we will not be including the First_Home_Game variable in future models.
+
+## UNC Game
+
+Can a model better predict home-game attendance when it accounts for whether or not UNC is the opponent?
+
+```{r}
+#| label: unc-game 
+#| #| message: false 
+#| #| warning: false  
+
+prev_fpi_diff_unc_lm <- linear_reg() |>   
+  set_engine("lm") |>   
+  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + UNC_Game,
+      data = home_att_data_prevFPI)  
+
+tidy(prev_fpi_diff_unc_lm) 
+glance(prev_fpi_diff_unc_lm)$adj.r.squared
+```
+
+While the p-values were improved in this model, the adjusted R-squared value decreased, suggesting that the inclusion of the UNC variable is unnecessary. However, this model is still worth noting, since it shows that the filled percentage of total stadium capacity typically increases by around 31.67 when a game is against UNC, and while this exact percentage can vary, this is a strongly statistically significant (p \< 0.001) trend.
+
+However, since the adjusted R-squared value of the model decreased as a result of adding the UNC variable, we will not be including the UNC variable it in future models.

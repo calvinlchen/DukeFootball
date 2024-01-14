@@ -167,11 +167,11 @@ Elon,,,,,NA,NA,Grass,8,31,2024,Sat,,Home,,,,,,,,,,Durham,NC,,,,,,,,,,,,FALSE,TRU
 Northwestern,,,,,0.8,-8.1,,9,7,2024,Sat,,Away,,,,,,,,,,Evanston,IL,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
 Connecticut,,,,,-15.7,-24.6,Grass,9,14,2024,Sat,,Home,,,,,,,,,,Durham,NC,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
 Middle Tenn. St.,,,,,-10.4,-19.3,,9,21,2024,Sat,,Away,,,,,,,,,,Murfreesboro,TN,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
-Florida St.,,,,,16.8,7.9,,,,2024,,,,,,,,,,,,,,,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
-North Carolina,,,,,8.7,-0.2,,,,2024,,,,,,,,,,,,,,,,,,,,,,,,,,TRUE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
-SMU,,,,,11.9,3,,,,2024,,,,,,,,,,,,,,,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
-Virginia Tech,,,,,5.1,-3.8,,,,2024,,,,,,,,,,,,,,,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
-Georgia Tech,,,,,4.1,-4.8,,,,2024,,,,,,,,,,,,,,,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
-Miami (Fla.),,,,,10.1,1.2,,,,2024,,,,,,,,,,,,,,,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
-North Carolina St.,,,,,7.2,-1.7,,,,2024,,,,,,,,,,,,,,,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
-Wake Forest,,,,,-1.7,-10.6,,,,2024,,,,,,,,,,,,,,,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
+Florida St.,,,,,16.8,7.9,Grass,,,2024,,,Home,,,,,,,,,,Durham,NC,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
+North Carolina,,,,,8.7,-0.2,Grass,,,2024,,,Home,,,,,,,,,,Durham,NC,,,,,,,,,,,,TRUE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
+SMU,,,,,11.9,3,Grass,,,2024,,,Home,,,,,,,,,,Durham,NC,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
+Virginia Tech,,,,,5.1,-3.8,Grass,,,2024,,,Home,,,,,,,,,,Durham,NC,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
+Georgia Tech,,,,,4.1,-4.8,,,,2024,,,Away,,,,,,,,,,Atlanta,GA,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
+Miami (Fla.),,,,,10.1,1.2,,,,2024,,,Away,,,,,,,,,,Miami Gardens,FL,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
+North Carolina St.,,,,,7.2,-1.7,,,,2024,,,Away,,,,,,,,,,Raleigh,NC,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
+Wake Forest,,,,,-1.7,-10.6,,,,2024,,,Away,,,,,,,,,,Winston-Salem,NC,,,,,,,,,,,,FALSE,,,,,FALSE,FALSE,,TRUE,,,,,TRUE,TRUE
