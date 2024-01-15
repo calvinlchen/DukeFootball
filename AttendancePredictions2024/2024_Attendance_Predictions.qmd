@@ -937,6 +937,10 @@ While the model predicts an attendance percentage of `{r} FSU_2024_pred` percent
 While it is difficult to predict what the home game attendance will be nearly a year in advance, below are my final *January* predictions for the number of attendees at 2024 Duke home football games:
 
 ```{r}
+#| label: final-jan-predictions
+#| #| message: false 
+#| #| warning: false
+
 janV2_pred_model_output <- tibble(
   Name = c("Elon",
            "Connecticut",
