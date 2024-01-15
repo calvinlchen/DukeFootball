@@ -1,6 +1,7 @@
 ---
 title: "Predictions for 2024-Season Duke Football Attendance"
 subtitle: "Based on 2011-2023 Home-Game Attendance Records"
+author: "Calvin Chen"
 format: pdf
 editor: visual
 ---
@@ -15,6 +16,10 @@ In January 2024, initial predictions for 2024 game attendance were created. (The
 
 The aim of these predictions is to assist in efforts to increase football home-game attendance at Duke University. By using historical game data to predict future game attendance, we can later compare these predictions to actual 2024 attendance figures to determine if a statistically significant improvement in home-game attendance was achieved in the 2024 season.
 
+## Credits
+
+Data was compiled from various sources, including ESPN and cfbstats.com, and analyzed by Calvin Chen. The predictive model and visualizations were developed by Calvin Chen.
+
 # Packages
 
 ```{r}
@@ -24,6 +29,7 @@ The aim of these predictions is to assist in efforts to increase football home-g
 
 library(tidyverse)
 library(tidymodels)
+library(cowplot)
 
 ```
 
@@ -92,12 +98,16 @@ home_att_data |>
   ) +
   geom_point(alpha = 0.333) +
   facet_wrap(~OppName, strip.position = "top", nrow = 1) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
   scale_x_continuous(labels = NULL, breaks = NULL) +
   labs(title = "Duke Home-Game Attendance per Opponent",
        subtitle = "Percentage of Stadium Capacity Filled per Game\n2011-2023",
        x = "Opponent",
        y = "Attendance (% of stadium capacity filled)",
-       color = "Renovated\nStadium")
+       color = "Renovated\nStadium") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Calvin Chen",
+           size = 3, color = "gray50")
 
 home_att_data |>
   filter(OppName %in% home_opp_list) |>
@@ -111,7 +121,10 @@ home_att_data |>
        subtitle = "Number of Attendees per Game\n2011-2023",
        x = "Opponent",
        y = "Attendance (# of people)",
-       color = "Renovated\nStadium")
+       color = "Renovated\nStadium") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Calvin Chen",
+           size = 3, color = "gray50")
 
 ```
 
@@ -195,11 +208,15 @@ home_att_data |>
   ) +
   geom_point() +
   scale_x_continuous(breaks = seq(from = 2012, to = 2023, by = 2)) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
   labs(title = "Home-Game Attendance Against UNC",
        subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
        x = "Year",
        y = "Attendance (% of stadium capacity filled)",
-       color = "Renovated\nStadium")
+       color = "Renovated\nStadium") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 
 home_att_data |>
   filter(OppName == "North Carolina") |>
@@ -212,7 +229,10 @@ home_att_data |>
        subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
        x = "Year",
        y = "Attendance (# of attendees)",
-       color = "Renovated\nStadium")
+       color = "Renovated\nStadium") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 ```
 
 ## SMU
@@ -259,11 +279,32 @@ home_att_data |>
   ) +
   geom_point() +
   scale_x_continuous(breaks = seq(from = 2011, to = 2023, by = 2)) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
   labs(title = "Home-Game Attendance Against Virginia Tech",
        subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
        x = "Year",
        y = "Attendance (% of stadium capacity filled)",
-       color = "Renovated\nStadium")
+       color = "Renovated\nStadium") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
+
+home_att_data |>
+  filter(OppName == "Virginia Tech") |>
+  ggplot(
+    aes(x = Year, y = AttPct, color = OppFPI)
+  ) +
+  geom_point() +
+  scale_x_continuous(breaks = seq(from = 2011, to = 2023, by = 2)) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(title = "Home-Game Attendance Against Virginia Tech",
+       subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
+       x = "Year",
+       y = "Attendance (% of stadium capacity filled)",
+       color = "Virginia\nTech's FPI") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 
 home_att_data |>
   filter(OppName == "Virginia Tech") |>
@@ -276,20 +317,10 @@ home_att_data |>
        subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
        x = "Year",
        y = "Attendance (# of attendees)",
-       color = "Renovated\nStadium")
-
-home_att_data |>
-  filter(OppName == "Virginia Tech") |>
-  ggplot(
-    aes(x = Year, y = AttPct, color = OppFPI)
-  ) +
-  geom_point() +
-  scale_x_continuous(breaks = seq(from = 2011, to = 2023, by = 2)) +
-  labs(title = "Home-Game Attendance Against Virginia Tech",
-       subtitle = "Duke Football, Wallace Wade Stadium, 2011-2023",
-       x = "Year",
-       y = "Attendance (% of stadium capacity filled)",
-       color = "Virginia\nTech's FPI")
+       color = "Renovated\nStadium") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 ```
 
 # Team Performance vs. Attendance
@@ -321,7 +352,11 @@ home_att_data_prevFPI |>
        subtitle = "Duke University Football, Wallace Wade Stadium, 2011-2023",
        color = "FPI Difference\nbetween Duke\nand opponent",
        x = "Opponent FPI (at end of previous season)",
-       y = "Game Attendance (% of stadium capacity)")
+       y = "Game Attendance (% of stadium capacity)") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Linear model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 
 prev_fpi_lm <- linear_reg() |>
   set_engine("lm") |>
@@ -451,7 +486,11 @@ home_att_data_prevFPI |>
                   Duke University Football, Wallace Wade Stadium, 2011-2023",
        x = "Opponent's FPI Rating (end of previous season)",
        y = "Game Attendance (% of stadium capacity)",
-       color = "Length of\nWin Streak\n(# of games)")
+       color = "Length of\nWin Streak\n(# of games)") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Calvin Chen",
+           size = 3, color = "gray50")
 ```
 
 # Time
@@ -474,7 +513,11 @@ home_att_data |>
   labs(title = "Month of Game vs. Attendance",
        subtitle = "Duke University Football, Wallace Wade Stadium, 2011-2023",
        x = "Month",
-       y = "Game Attendance (% of stadium capacity)")
+       y = "Game Attendance (% of stadium capacity)") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Linear model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 
 ```
 
@@ -503,7 +546,11 @@ home_att_data |>
   labs(title = "Day of Game vs. Attendance",
        subtitle = "Duke University Football, Wallace Wade Stadium, 2011-2023",
        x = "Day of the Week",
-       y = "Game Attendance (% of stadium capacity)")
+       y = "Game Attendance (% of stadium capacity)") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 
 ```
 
@@ -525,7 +572,11 @@ home_att_data |>
   labs(title = "Time of Day vs. Home-Game Attendance",
        subtitle = "Duke University Football, Wallace Wade Stadium, 2011-2023",
        x = "Approx. Start Time (24-hr format)",
-       y = "Game Attendance (% of stadium capacity)")
+       y = "Game Attendance (% of stadium capacity)") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Linear model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 
 ```
 
@@ -581,7 +632,11 @@ home_att_data |>
   labs(title = "Stadium Renovation vs. Home-Game Attendance (%)",
        subtitle = "Duke University Football, Wallace Wade Stadium, 2011-2023",
        x = "Renovated Stadium?",
-       y = "Game Attendance (% of stadium capacity)")
+       y = "Game Attendance (% of stadium capacity)") +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 
 home_att_data |>
   ggplot(
@@ -591,7 +646,10 @@ home_att_data |>
   labs(title = "Stadium Renovation vs. Home-Game Attendance (#)",
        subtitle = "Duke University Football, Wallace Wade Stadium, 2011-2023",
        x = "Renovated Stadium?",
-       y = "Game Attendance (# of people)")
+       y = "Game Attendance (# of people)") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 
 ```
 
@@ -831,7 +889,10 @@ jan_pred_model_data |>
   labs(title = "January Model - Predictions",
        subtitle = "Duke 2024 Home Football Games, Wallace Wade Stadium",
        x = "Opponent Name",
-       y = "Predicted Attendance (# of people)")
+       y = "Predicted Attendance (# of people)") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Predictive model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 ```
 
 ### Elon
@@ -931,7 +992,10 @@ janV2_pred_model_data |>
        subtitle = "as of January 2024\n
                   Duke 2024 Home Football Games, Wallace Wade Stadium",
        x = "Opponent Name",
-       y = "Predicted Attendance (% of stadium capacity)")
+       y = "Predicted Attendance (% of stadium capacity)") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Predictive model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 
 janV2_pred_model_data |>
   ggplot(
@@ -951,7 +1015,10 @@ janV2_pred_model_data |>
        subtitle = "as of January 2024\n
                   Duke 2024 Home Football Games, Wallace Wade Stadium",
        x = "Opponent Name",
-       y = "Predicted Attendance (# of people)")
+       y = "Predicted Attendance (# of people)") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Predictive model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
 ```
 
 These predictions are based on:
