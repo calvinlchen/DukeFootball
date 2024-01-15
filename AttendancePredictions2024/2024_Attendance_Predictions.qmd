@@ -1050,3 +1050,9 @@ In the months to come, we hope to improve these predictions based on additional 
 -   Temporal factors. While factors such as month appear to be overall insignificant, the time of day during which a game occurs seems to relate to attendance. However, the time and day on which each game will take place has not yet been assigned (as of January).
 
 -   Weather. We have yet to investigate whether game-time weather is related to stadium attendance. This factor is relatively irrelevant for the time being since weather predictions are not available at this time for the 2024 season. However, weather forecasts may prove to be a useful predictor for future attempts.
+
+-   The individual opponents. We have not yet investigated if including some/any of the opponents *other than UNC* as variables would improve the predictive power of the model.
+
+-   Data-set time frame. The V3 data-set only contains games as early as 2011, but further investigation could be conducted using data that extends farther back in time.
+
+-   New variables. More variables beyond those included in this V3 data-set have the potential to be related to game-time attendance. It could benefit our predictions to investigate the predictive power of additional variables before/during the 2024 season.
