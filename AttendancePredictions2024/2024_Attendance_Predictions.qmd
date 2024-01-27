@@ -996,7 +996,7 @@ janV2_pred_model_data |>
   geom_hline(yintercept = 100, color = "red", linetype = "dashed", size = 1) +
   geom_errorbar(aes(ymin = AttPct - SdErr, ymax = AttPct + SdErr)) +
   scale_y_continuous(labels = function(x) paste0(x, "%")) +
-  labs(title = "2024-Season Duke Football Attendance Predictions",
+  labs(title = "2024-Season Duke Football Attendance Predictions V1",
        subtitle = "as of January 2024\n
                   Duke 2024 Home Football Games, Wallace Wade Stadium",
        x = "Opponent Name",
@@ -1019,7 +1019,7 @@ janV2_pred_model_data |>
   geom_point() +
   geom_hline(yintercept = 40004, color = "red", linetype = "dashed", size = 1) +
   geom_errorbar(aes(ymin = AttNum - SdErrNum, ymax = AttNum + SdErrNum)) +
-  labs(title = "2024-Season Duke Football Attendance Predictions",
+  labs(title = "2024-Season Duke Football Attendance Predictions V1",
        subtitle = "as of January 2024\n
                   Duke 2024 Home Football Games, Wallace Wade Stadium",
        x = "Opponent Name",
@@ -1072,16 +1072,830 @@ Duke's home schedule was recently announced, so this section includes updates to
 #| message: false
 #| warning: false
 
-att_data_2 <- read_csv("data/Duke Stats - DukeAttendanceV5.csv")
+att_data_2 <- read_csv("data/Duke Stats - DukeAttendanceV6.csv")
 
 att_data_2 <- att_data_2 |>
+  mutate(NumericalDate = (Month-8)*100 + Date/31*100) |>
   mutate(Day = as.factor(Day)) |>
-  mutate(Renovated = Rennovated)
+  mutate(Rain = if_else(is.na(Weather), NA,
+                        if_else(Weather %in% c("Rain", "Light Rain", "Heavy Rain"),
+                                TRUE,
+                                FALSE))
+  ) |>
+  mutate(onSaturday = if_else(Day == "Sat", TRUE, FALSE)) |>
+  mutate(FSU_Game = if_else(OppName == "Florida St.", TRUE, FALSE))
 
 home_att_data_2 <- att_data_2 |>
   filter(Site == "Home", Year < 2024)
+
+home_att_data_prevFPI_2 <- home_att_data_2 |>
+  filter(!is.na(OppFPI_PrevYear)) |>
+  mutate(OppFPI_PrevYear = OppFPI_PrevYear,
+         FPI_Diff_PrevYear = FPI_Diff_PrevYear)
 ```
 
-## Testing of Prior Model with New Dataset
+## Testing Prior Model with New Dataset
 
 Since this section's dataset contains more rows, we will examine if the section-one prediction model is any stronger when given the new data.
+
+```{r}
+#| label: prediction-model-jan-data2 
+#| message: false 
+#| warning: false
+
+pred_pct_lm_jan2 <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear + FPI_Diff_PrevYear + Renovated + UNC_Game,
+      data = home_att_data_prevFPI_2)
+
+tidy(pred_pct_lm_jan2)
+glance(pred_pct_lm_jan2)$adj.r.squared
+```
+
+```{r}
+#| label: jan-prediction-calculations-data2 
+#| message: false 
+#| warning: false
+
+
+Elon_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "Elon")
+Elon_2024_pred <- predict(pred_pct_lm_jan2$fit,
+                          Elon_2024,
+                          type = "response",
+                          se.fit = TRUE)
+Elon_2024_pred_se <- Elon_2024_pred$se.fit
+#Elon_2024_pred
+#Elon_2024_pred_se
+
+UConn_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "Connecticut")
+UConn_2024_pred <- predict(pred_pct_lm_jan2$fit,
+                           UConn_2024,
+                           type = "response",
+                           se.fit = TRUE)
+UConn_2024_pred_se <- UConn_2024_pred$se.fit
+#UConn_2024_pred
+#UConn_2024_pred_se
+
+FSU_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "Florida St.")
+FSU_2024_pred <- predict(pred_pct_lm_jan2$fit,
+                         FSU_2024,
+                         type = "response",
+                         se.fit = TRUE)
+FSU_2024_pred_se <- FSU_2024_pred$se.fit
+#FSU_2024_pred
+
+UNC_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "North Carolina")
+UNC_2024_pred <- predict(pred_pct_lm_jan2$fit,
+                         UNC_2024,
+                         type = "response",
+                         se.fit = TRUE)
+UNC_2024_pred_se <- UNC_2024_pred$se.fit
+#UNC_2024_pred
+
+SMU_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "SMU")
+SMU_2024_pred <- predict(pred_pct_lm_jan2$fit,
+                         SMU_2024,
+                         type = "response",
+                         se.fit = TRUE)
+SMU_2024_pred_se <- SMU_2024_pred$se.fit
+#SMU_2024_pred
+
+VT_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "Virginia Tech")
+VT_2024_pred <- predict(pred_pct_lm_jan2$fit,
+                        VT_2024,
+                        type = "response",
+                        se.fit = TRUE)
+VT_2024_pred_se <- VT_2024_pred$se.fit
+#VT_2024_pred
+
+jan_pred_model_output2 <- tibble(
+  Name = c("Elon",
+           "Connecticut",
+           "North Carolina",
+           "Florida St.",
+           "SMU",
+           "Virginia Tech"),
+  "Attendance %" = c(Elon_2024_pred$fit,
+                     UConn_2024_pred$fit, 
+                     UNC_2024_pred$fit,
+                     FSU_2024_pred$fit,
+                     SMU_2024_pred$fit,
+                     VT_2024_pred$fit),
+  "Standard Error (Att. %)" = c(Elon_2024_pred$se.fit,
+                       UConn_2024_pred$se.fit,
+                       UNC_2024_pred$se.fit,
+                       FSU_2024_pred$se.fit,
+                       SMU_2024_pred$se.fit,
+                       VT_2024_pred$se.fit),
+  "Estimated # of People" = c(Elon_2024_pred$fit * 40004 / 100,
+                         UConn_2024_pred$fit * 40004 / 100, 
+                         UNC_2024_pred$fit * 40004 / 100,
+                         FSU_2024_pred$fit * 40004 / 100,
+                         SMU_2024_pred$fit * 40004 / 100,
+                         VT_2024_pred$fit * 40004 / 100)
+)
+
+#jan_pred_model_output
+
+jan_pred_model_data2 <- jan_pred_model_output2 |>
+  mutate(AttNum = `Estimated # of People`,
+         AttPct = `Attendance %`,
+         SdErr = `Standard Error (Att. %)`,
+         SdErrNum = SdErr * 40004 / 100) |>
+  data.frame()
+
+jan_pred_model_data2 |>
+  ggplot(
+    aes(x = fct_relevel(Name,
+                        "Elon",
+                        "Connecticut",
+                        "North Carolina",
+                        "Florida St.",
+                        "SMU",
+                        "Virginia Tech"),
+        y = AttNum)
+  ) +
+  geom_point() +
+  geom_errorbar(aes(ymin = AttNum - SdErrNum, ymax = AttNum + SdErrNum)) +
+  labs(title = "January Model v2 - Predictions",
+       subtitle = "Duke 2024 Home Football Games, Wallace Wade Stadium",
+       x = "Opponent Name",
+       y = "Predicted Attendance (# of people)") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Predictive model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
+
+# below is a new version of the final prediction model:
+janV3_pred_model_output <- tibble(
+  Name = c("Elon",
+           "Connecticut",
+           "North Carolina",
+           "Florida St.",
+           "SMU",
+           "Virginia Tech"),
+  "Attendance %" = c(attnum_na_fpi$"median(AttNum)" / 40004 * 100,
+                     UConn_2024_pred$fit, 
+                     UNC_2024_pred$fit,
+                     95,
+                     SMU_2024_pred$fit,
+                     VT_2024_pred$fit),
+  "Standard Error (Att. %)" = c(attnum_na_fpi$"sd(AttNum)" / 40004 * 100,
+                                UConn_2024_pred$se.fit,
+                                UNC_2024_pred$se.fit,
+                                FSU_2024_pred$se.fit * 3, # x3 due to uncertainty
+                                SMU_2024_pred$se.fit,
+                                VT_2024_pred$se.fit),
+  "Estimated # of People" = c(attnum_na_fpi$"median(AttNum)",
+                              UConn_2024_pred$fit * 40004 / 100, 
+                              UNC_2024_pred$fit * 40004 / 100,
+                              95 * 40004 / 100,
+                              SMU_2024_pred$fit * 40004 / 100,
+                              VT_2024_pred$fit * 40004 / 100)
+)
+
+janV3_pred_model_data <- janV3_pred_model_output |>
+  mutate(AttNum = `Estimated # of People`,
+         AttPct = `Attendance %`,
+         SdErr = `Standard Error (Att. %)`,
+         SdErrNum = SdErr * 40004 / 100) |>
+  data.frame()
+
+#janV3_pred_model_data
+
+janV3_pred_model_data |>
+  ggplot(
+    aes(x = fct_relevel(Name,
+                        "Elon",
+                        "Connecticut",
+                        "North Carolina",
+                        "Florida St.",
+                        "SMU",
+                        "Virginia Tech"),
+        y = AttPct)
+  ) +
+  geom_point() +
+  geom_hline(yintercept = 100, color = "red", linetype = "dashed", size = 1) +
+  geom_errorbar(aes(ymin = AttPct - SdErr, ymax = AttPct + SdErr)) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  labs(title = "2024-Season Duke Football Attendance Predictions V2",
+       subtitle = "as of January 2024\n
+                  Duke 2024 Home Football Games, Wallace Wade Stadium",
+       x = "Opponent Name",
+       y = "Predicted Attendance (% of stadium capacity)") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Predictive model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
+
+janV2_pred_model_data |>
+  ggplot(
+    aes(x = fct_relevel(Name,
+                        "Elon",
+                        "Connecticut",
+                        "North Carolina",
+                        "Florida St.",
+                        "SMU",
+                        "Virginia Tech"),
+        y = AttNum)
+  ) +
+  geom_point() +
+  geom_hline(yintercept = 40004, color = "red", linetype = "dashed", size = 1) +
+  geom_errorbar(aes(ymin = AttNum - SdErrNum, ymax = AttNum + SdErrNum)) +
+  labs(title = "2024-Season Duke Football Attendance Predictions V2",
+       subtitle = "as of January 2024\n
+                  Duke 2024 Home Football Games, Wallace Wade Stadium",
+       x = "Opponent Name",
+       y = "Predicted Attendance (# of people)") +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Predictive model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
+```
+
+### Comparison
+
+![](data/V1%20Predictions.png){width="365"}
+
+## Stadium Renovation
+
+```{r}
+#| label: renovated-stadium-pct 
+#| #| message: FALSE 
+#| #| warning: FALSE  
+
+renovated_pct_lm <- linear_reg() |>   
+  set_engine("lm") |>   
+  fit(AttPct ~ Renovated, data = home_att_data_2)  
+
+tidy(renovated_pct_lm)
+glance(renovated_pct_lm)$adj.r.squared
+```
+
+```{r}
+#| label: renovated-stadium-count 
+#| #| message: FALSE 
+#| #| warning: FALSE  
+
+renovated_count_lm <- linear_reg() |>   
+  set_engine("lm") |>   
+  fit(AttNum ~ Renovated, data = home_att_data_2)  
+
+tidy(renovated_count_lm) 
+glance(renovated_count_lm)$adj.r.squared
+```
+
+Based on these models containing data from 2001-2023, evidence can be seen that home-game **attendance head-count** **remained largely unchanged after the 2016 Wallace Wade Stadium rennovation.** The percentage of the full stadium which was filled per game tended to be *less* after the renovation (by 9% on average), as observable in the first model with a p-value of approximately 0.001. The second model shows that no statistically significant relationship is present between stadium renovation and attendance head-count.
+
+The following models will use both attendance percentage and attendance head-count depending on which yields better predictions (as suggested by the adjusted r-squared value of each model).
+
+## Head Coach
+
+Was stadium attendance significantly higher during (either) Elko and Cutcliffe's times as head coach?
+
+```{r}
+#| label: elko
+#| message: FALSE
+#| warning: FALSE
+
+elko_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ Elko, data = home_att_data_2)
+
+tidy(elko_lm)
+glance(elko_lm)$adj.r.squared
+```
+
+```{r}
+#| label: cutcliffe
+#| message: FALSE
+#| warning: FALSE
+
+cutcliffe_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Cutcliffe, data = home_att_data_2)
+
+tidy(cutcliffe_lm)
+glance(cutcliffe_lm)$adj.r.squared
+```
+
+While no statistically significant increase in Duke home-game attendance was observed during Elko's time as head coach, **a *statistically significant* increase in attendance was observed during Cutcliffe's seasons as head coach.** On average, an additional 4,876 people attended each home game when Cutcliffe was head coach of Duke football. The p-value of this finding is \<0.0001.
+
+## Previous-Season FPI
+
+```{r}
+#| label: v2-prev-fpi
+#| message: FALSE
+#| warning: FALSE
+
+fpi2_pct <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ OppFPI_PrevYear, data = home_att_data_prevFPI_2)
+
+fpi2_num <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ OppFPI_PrevYear, data = home_att_data_prevFPI_2)
+
+tidy(fpi2_pct)
+glance(fpi2_pct)$adj.r.squared
+
+tidy(fpi2_num)
+glance(fpi2_num)$adj.r.squared
+```
+
+```{r}
+#| label: v2-prev-fpi-diff
+#| message: FALSE
+#| warning: FALSE
+
+pred2_fpiDiff <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ FPI_Diff_PrevYear, data = home_att_data_2)
+
+tidy(pred2_fpiDiff)
+glance(pred2_fpiDiff)$adj.r.squared
+```
+
+Even with the new data, the *previous-season* FPI of the opponent continues to be a significant predictor of stadium attendance. For every 1-point increase in FPI of Duke's opponent at the end of the previous season, on average the stadium was filled by an additional 0.37% of its total capacity.
+
+When the model was applied to headcount instead of capacity percentage, it was found that attendance increased by 169 people on average per 1-point increase in the opponent's previous-season FPI.
+
+This method has slightly stronger predictive power when applied to attendance *head-count* rather than attendance percentage, as indicated by a slightly higher adjusted r-squared value and a slightly lower p-value (0.066 vs. 0.022).
+
+Ultimately, this indicates that **when an opponent tended to be more powerful in its previous season, home-game attendance in the current season tends to be increased against that opponent.**
+
+## Predictions Based on Weather
+
+### Precipitation
+
+```{r}
+#| label: precipitation-model
+#| message: FALSE
+#| warning: FALSE
+
+precip_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Rain, data = home_att_data_2)
+
+tidy(precip_lm)
+glance(precip_lm)$adj.r.squared
+```
+
+Based on the weather data collected so far, it appears that **rain is potentially related to a decrease in stadium attendance.** When there was rainfall of any strength, home-game attendance *decreased* on average by 6,024 people (which constitutes about *15 percent* of the full stadium capacity). The p-value of this *beta* is about 0.092, which is less than 0.1.
+
+### Temperature
+
+```{r}
+#| label: temp-model
+#| message: FALSE
+#| warning: FALSE
+
+temp_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ Temp, data = home_att_data_2)
+
+tidy(temp_lm)
+glance(temp_lm)$adj.r.squared
+```
+
+Based on the weather data collected so far, it appears that weather temperature is **not** a reliable predictor of stadium attendance for Duke home games.
+
+### Humidity
+
+```{r}
+#| label: humidity-model
+#| message: FALSE
+#| warning: FALSE
+
+humidity_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ Humidity, data = home_att_data_2)
+
+tidy(humidity_lm)
+glance(humidity_lm)$adj.r.squared
+```
+
+Surprisingly, there is some evidence that **games with greater humidity have slightly lower attendance.** For every 1-percentage increase in humidity, on average the stadium attendance decreased by about -0.15% of the total stadium capacity. In other words, if humidity was decreased by 25, stadium attendance decreased on average by about 3.7% of the total stadium capacity. The p-value for this *beta* is approximately 0.08.
+
+## Time
+
+### Date
+
+A new variable, *numericDate*, is introduced. It is calculated by the following:
+
+$$
+(Month - 8) * 100 + (Date / 31) * 100
+$$
+
+This formula means that a football match taking place on August 1 will have a value of approximately $100/31$ *(minimum)*, and a match taking place on December 31 will have a value of 500 *(maximum)*.
+
+```{r}
+#| label: datenum-model
+#| message: FALSE
+#| warning: FALSE
+
+datenum_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ NumericalDate, data = home_att_data_2)
+
+tidy(datenum_lm)
+glance(datenum_lm)$adj.r.squared
+```
+
+Similar to section 1, we see **no** significant relationship between the date on which a Duke home game takes place and the stadium attendance.
+
+### Day of Week
+
+```{r}
+#| label: day-of-week-v2
+#| message: FALSE
+#| warning: FALSE
+
+day_week_v2_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Day, data = home_att_data_2)
+
+tidy(day_week_v2_lm)
+glance(day_week_v2_lm)$adj.r.squared
+```
+
+```{r}
+#| label: saturday-game
+#| message: FALSE
+#| warning: FALSE
+
+saturday_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ onSaturday, data = home_att_data_2)
+
+tidy(saturday_lm)
+glance(saturday_lm)$adj.r.squared
+```
+
+Similar to section 1, we see **no** significant relationship between the day of the week on which a Duke home game takes place and the stadium attendance. Whether or not a game took place on a Saturday also had no significant relationship with stadium attendance.
+
+## Duke Improvement from Previous Year
+
+Does an increase in Duke's FPI from the previous year correlate to increased stadium attendance?
+
+```{r}
+#| label: duke_fpi_change
+#| message: FALSE
+#| warning: FALSE
+
+fpi_change_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttPct ~ DukeFPI_NetChange, data = home_att_data_2)
+
+tidy(fpi_change_lm)
+glance(fpi_change_lm)$adj.r.squared
+
+```
+
+There is very slight evidence that Duke's home-game attendance could increase when they are more improved from the previous season (based on season-end FPI rating). However, this evidence is ***not*** statistically significant.
+
+## First Game of Season
+
+```{r}
+#| label: first-game
+#| message: FALSE
+#| warning: FALSE
+
+first_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ First_Game, data = home_att_data_2)
+
+tidy(first_lm)
+glance(first_lm)$adj.r.squared
+```
+
+There is significant evidence to suggest that **home-game attendance *increases* when a game is the first one of the season.** Attendance increased on average by about 4,141 people when a game was the first game of Duke's football season. The p-value of this *beta* is about 0.030, which is \<0.1 and is *statistically significant.*
+
+## UNC Game
+
+```{r}
+#| label: unc-game-v2
+#| message: FALSE
+#| warning: FALSE
+
+unc_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ UNC_Game, data = home_att_data_2)
+
+tidy(unc_lm)
+glance(unc_lm)$adj.r.squared
+```
+
+As seen in Section 1, **when UNC is the opponent, stadium attendance tends to increase by a greatly significant amount**. On average, home-game attendance increases by about 9,283 people when Duke plays UNC. The p-value of this finding is \<0.0001.
+
+## Florida State Game
+
+Does stadium attendance differ significantly when the opponent is Florida State?
+
+```{r}
+#| label: fsu-game
+#| message: FALSE
+#| warning: FALSE
+
+fsu_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ FSU_Game, data = home_att_data_2)
+
+tidy(fsu_lm)
+glance(fsu_lm)$adj.r.squared
+```
+
+It appears that stadium attendance is not significantly related to whether or not Florida State is the opponent. The p-value of the beta in this case is 0.866, which is well above 0.1.
+
+## Ranked Opponent
+
+When an opponent is ranked in the top 25 at game-time, does home-game attendance increase? *(This data was only calculated back to 2011, not 2001.)*
+
+```{r}
+#| label: ranked-opp
+#| message: FALSE
+#| warning: FALSE
+
+ranked_opp_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ OppRankedGametime, data = home_att_data_2)
+
+tidy(ranked_opp_lm)
+glance(ranked_opp_lm)$adj.r.squared
+```
+
+There is statistically significant evidence that **home-game attendance increases when Duke's opponent is ranked.** Attendance increased on average by 6,816 people when facing a ranked opponent. The p-value of this *beta* is \<0.001.
+
+## Summary of Significant Variables
+
+Stadium attendance tended to *increase* when:
+
+-   David Cutcliffe was head coach during the season.
+
+-   the opponent's previous-season FPI was high.
+
+-   the event was the first game of the season.
+
+-   UNC was the opponent.
+
+-   Duke's opponent is ranked in the top 25.
+
+Stadium attendance tended to *decrease* when:
+
+-   precipitation occurred during the game.
+
+-   humidity was higher during the game. (likely related to rainfall)
+
+The following variables historically had no statistically significant impact on home-game attendance:
+
+-   Mike Elko as head coach during the season.
+
+-   difference between Duke and its opponent in terms of previous-season FPI score.
+
+-   temperature during gametime.
+
+-   month, date, and day of the week.
+
+-   whether Duke's FPI rating was improved or decreased from the previous season.
+
+-   Florida State was the opponent.
+
+Some factors, such as time of day and win streak, were not reviewed in this section because they are not currently useful to our 2024 home-game predictions.
+
+## Updated Model
+
+The model below utilizes variables in this section that were deemed statistically significant: Cutcliffe, previous-season FPI, first-game status, UNC, and ranked-opponent status:
+
+```{r}
+#| label: late-jan-prediction-model-RAW
+#| message: FALSE
+#| warning: FALSE
+
+late_jan_pred_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Cutcliffe + OppFPI_PrevYear +
+      First_Game + UNC_Game + OppRankedGametime,
+      data = home_att_data_2)
+
+tidy(late_jan_pred_lm)
+glance(late_jan_pred_lm)$adj.r.squared
+
+```
+
+Below are models that combine the variables from Section 1 with the variables explored in the model above to create models with the highest-possible adjusted r-squared values:
+
+```{r}
+#| label: late-jan-prediction-model-MERGE
+#| message: FALSE
+#| warning: FALSE
+
+late_jan_pred_lm_merge <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Cutcliffe + OppFPI_PrevYear +
+        First_Game + UNC_Game + OppRankedGametime +
+        FPI_Diff_PrevYear + Renovated + Day,
+      data = home_att_data_2)
+
+tidy(late_jan_pred_lm_merge)
+glance(late_jan_pred_lm_merge)$adj.r.squared
+
+late_jan_pred_lm_merge_noFPI <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Cutcliffe + First_Game + 
+        UNC_Game + OppRankedGametime +
+        Renovated + Day + Win_Streak,
+      data = home_att_data_2)
+
+tidy(late_jan_pred_lm_merge_noFPI)
+glance(late_jan_pred_lm_merge_noFPI)$adj.r.squared
+```
+
+The second model out of the two above does not contain variables related to FPI. This model will be used for Elon only since it has weaker predictive power and because no FPI values are available from ESPN for Elon.
+
+Average attendance figures from 2022-23 (used in the visualizations in the Final Predictions section):
+
+```{r}
+#| label: summary-stats
+#| message: FALSE
+#| warning: FALSE
+
+home_att_data_2 |>
+  filter(!is.na(AttNum)) |>
+  filter(Year >= 2022) |>
+  summarize("Mean Att. (#)" = mean(AttNum),
+            "Mean Att. (%)" = mean(AttPct))
+```
+
+## Final Predictions
+
+```{r}
+#| label: late-jan-prediction-calculations-data
+#| message: false 
+#| warning: false
+
+
+Elon_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "Elon")
+Elon_2024_pred <- predict(late_jan_pred_lm_merge_noFPI$fit,
+                          Elon_2024,
+                          type = "response",
+                          se.fit = TRUE)
+Elon_2024_pred_se <- Elon_2024_pred$se.fit
+#Elon_2024_pred
+#Elon_2024_pred_se
+
+UConn_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "Connecticut")
+UConn_2024_pred <- predict(late_jan_pred_lm_merge$fit,
+                           UConn_2024,
+                           type = "response",
+                           se.fit = TRUE)
+UConn_2024_pred_se <- UConn_2024_pred$se.fit
+#UConn_2024_pred
+#UConn_2024_pred_se
+
+UNC_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "North Carolina")
+UNC_2024_pred <- predict(late_jan_pred_lm_merge$fit,
+                         UNC_2024,
+                         type = "response",
+                         se.fit = TRUE)
+UNC_2024_pred_se <- UNC_2024_pred$se.fit
+#UNC_2024_pred
+
+FSU_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "Florida St.")
+FSU_2024_pred <- predict(late_jan_pred_lm_merge$fit,
+                         FSU_2024,
+                         type = "response",
+                         se.fit = TRUE)
+FSU_2024_pred_se <- FSU_2024_pred$se.fit
+#FSU_2024_pred
+
+SMU_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "SMU")
+SMU_2024_pred <- predict(late_jan_pred_lm_merge$fit,
+                         SMU_2024,
+                         type = "response",
+                         se.fit = TRUE)
+SMU_2024_pred_se <- SMU_2024_pred$se.fit
+#SMU_2024_pred
+
+VT_2024 <- att_data_2 |>
+  filter(Year == 2024, OppName == "Virginia Tech")
+VT_2024_pred <- predict(late_jan_pred_lm_merge$fit,
+                        VT_2024,
+                        type = "response",
+                        se.fit = TRUE)
+VT_2024_pred_se <- VT_2024_pred$se.fit
+#VT_2024_pred
+
+late_jan_pred_model_output <- tibble(
+  Name = c("Elon",
+           "UConn",
+           "North Carolina",
+           "Florida State",
+           "SMU",
+           "Virginia Tech"),
+  "Attendance %" = c(Elon_2024_pred$fit / 40004 * 100,
+                     UConn_2024_pred$fit / 40004 * 100, 
+                     UNC_2024_pred$fit / 40004 * 100,
+                     FSU_2024_pred$fit / 40004 * 100,
+                     SMU_2024_pred$fit / 40004 * 100,
+                     VT_2024_pred$fit / 40004 * 100),
+  "Standard Error (Att. #)" = c(Elon_2024_pred$se.fit,
+                       UConn_2024_pred$se.fit,
+                       UNC_2024_pred$se.fit,
+                       FSU_2024_pred$se.fit,
+                       SMU_2024_pred$se.fit,
+                       VT_2024_pred$se.fit),
+  "Estimated # of People" = c(Elon_2024_pred$fit,
+                         UConn_2024_pred$fit, 
+                         UNC_2024_pred$fit,
+                         FSU_2024_pred$fit,
+                         SMU_2024_pred$fit,
+                         VT_2024_pred$fit)
+)
+
+late_jan_pred_model_data <- late_jan_pred_model_output |>
+  mutate(AttNum = `Estimated # of People`,
+         AttPct = `Attendance %`,
+         SdErr = `Standard Error (Att. #)`,
+         SdErrPct = SdErr / 40004 * 100) |>
+  data.frame()
+
+```
+
+```{r}
+#| label: late-jan-pct
+#| fig-height: 5
+#| fig-width: 7 
+
+late_jan_pred_model_data |>
+  ggplot(
+    aes(x = fct_relevel(Name,
+                        "Elon",
+                        "UConn",
+                        "North Carolina",
+                        "Florida State",
+                        "SMU",
+                        "Virginia Tech"),
+        y = AttPct)
+  ) +
+  geom_point() +
+  geom_errorbar(aes(ymin = AttPct - SdErrPct, ymax = AttPct + SdErrPct)) +
+  labs(title = "2024-Season Attendance Predictions (version 3)",
+       subtitle = "Duke Football Home Games, Wallace Wade Stadium\n
+                   Upper Line = Max Capacity, Lower Line = Avg. Attendance 2022-23",
+       x = "Opponent Name",
+       y = "Predicted Attendance (% of stadium capacity)") +
+  geom_hline(yintercept = 100, color = "red",
+             linetype = "dashed", size = 1, alpha = 0.5) +
+  geom_hline(yintercept = 62.07187, color = "blue",
+             linetype = "dashed", size = 1,  alpha = 0.5) +
+  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Predictive model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
+
+```
+
+```{r}
+#| label: late-jan-num
+#| fig-height: 5
+#| fig-width: 7 
+
+late_jan_pred_model_data |>
+  ggplot(
+    aes(x = fct_relevel(Name,
+                        "Elon",
+                        "UConn",
+                        "North Carolina",
+                        "Florida State",
+                        "SMU",
+                        "Virginia Tech"),
+        y = AttNum)
+  ) +
+  geom_point() +
+  geom_errorbar(aes(ymin = AttNum - SdErr, ymax = AttNum + SdErr)) +
+  labs(title = "2024-Season Attendance Predictions (version 3)",
+       subtitle = "Duke Football Home Games, Wallace Wade Stadium\n
+                   Upper Line = Max Capacity, Lower Line = Avg. Attendance 2022-23",
+       x = "Opponent Name",
+       y = "Predicted Attendance (# of people)") +
+  geom_hline(yintercept = 40004, color = "red",
+             linetype = "dashed", size = 1, alpha = 0.5) +
+  geom_hline(yintercept = 24831.23, color = "blue",
+             linetype = "dashed", size = 1, alpha = 0.5) +
+  annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
+           label = "Predictive model and visualizations developed by Calvin Chen",
+           size = 3, color = "gray50")
+
+```
+
+The graphs above do take predictive liberties by assuming that *Florida State* will be *ranked* (in the top 25) at game-time.
+
+**Additional Commentary Coming Soon.**
