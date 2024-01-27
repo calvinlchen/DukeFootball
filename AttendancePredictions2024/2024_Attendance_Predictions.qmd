@@ -1629,6 +1629,23 @@ glance(ranked_opp_lm)$adj.r.squared
 
 There is statistically significant evidence that **home-game attendance increases when Duke's opponent is ranked.** Attendance increased on average by 6,816 people when facing a ranked opponent. The p-value of this *beta* is \<0.001.
 
+## NC-Based Opponent
+
+```{r}
+#| label: nc-opp
+#| message: FALSE
+#| warning: FALSE
+
+nc_opp_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ NC_Opponent, data = home_att_data_2)
+
+tidy(nc_opp_lm)
+glance(nc_opp_lm)$adj.r.squared
+```
+
+There is strong evidence that **stadium attendance increases when Duke's opponent is a school located in North Carolina.** On average, NC opponents had an audience increase of 4,058 people per game. The p-value of this *beta* is roughly 0.002.
+
 ## Summary of Significant Variables
 
 Stadium attendance tended to *increase* when:
@@ -1642,6 +1659,8 @@ Stadium attendance tended to *increase* when:
 -   UNC was the opponent.
 
 -   Duke's opponent is ranked in the top 25.
+
+-   the opponent's school is located in NC.
 
 Stadium attendance tended to *decrease* when:
 
@@ -1677,7 +1696,8 @@ The model below utilizes variables in this section that were deemed statisticall
 late_jan_pred_lm <- linear_reg() |>
   set_engine("lm") |>
   fit(AttNum ~ Cutcliffe + OppFPI_PrevYear +
-      First_Game + UNC_Game + OppRankedGametime,
+        First_Game + UNC_Game + NC_Opponent +
+        OppRankedGametime,
       data = home_att_data_2)
 
 tidy(late_jan_pred_lm)
@@ -1685,7 +1705,7 @@ glance(late_jan_pred_lm)$adj.r.squared
 
 ```
 
-Below are models that combine the variables from Section 1 with the variables explored in the model above to create models with the highest-possible adjusted r-squared values:
+Below are models that combine the variables from Section 1 with the variables explored in the model above to create models with higher adjusted r-squared values:
 
 ```{r}
 #| label: late-jan-prediction-model-MERGE
@@ -1694,7 +1714,7 @@ Below are models that combine the variables from Section 1 with the variables ex
 
 late_jan_pred_lm_merge <- linear_reg() |>
   set_engine("lm") |>
-  fit(AttNum ~ Cutcliffe + OppFPI_PrevYear +
+  fit(AttNum ~ Cutcliffe * OppFPI_PrevYear *
         First_Game + UNC_Game + OppRankedGametime +
         FPI_Diff_PrevYear + Renovated + Day,
       data = home_att_data_2)
@@ -1705,8 +1725,8 @@ glance(late_jan_pred_lm_merge)$adj.r.squared
 late_jan_pred_lm_merge_noFPI <- linear_reg() |>
   set_engine("lm") |>
   fit(AttNum ~ Cutcliffe + First_Game + 
-        UNC_Game + OppRankedGametime +
-        Renovated + Day + Win_Streak,
+        UNC_Game + OppRankedGametime *
+        Renovated + Day + Win_Streak + NC_Opponent,
       data = home_att_data_2)
 
 tidy(late_jan_pred_lm_merge_noFPI)
@@ -1831,7 +1851,7 @@ late_jan_pred_model_data <- late_jan_pred_model_output |>
 
 ```{r}
 #| label: late-jan-pct
-#| fig-height: 5
+#| fig-height: 6
 #| fig-width: 7 
 
 late_jan_pred_model_data |>
@@ -1843,20 +1863,22 @@ late_jan_pred_model_data |>
                         "Florida State",
                         "SMU",
                         "Virginia Tech"),
-        y = AttPct)
+        y = AttPct/100)
   ) +
   geom_point() +
-  geom_errorbar(aes(ymin = AttPct - SdErrPct, ymax = AttPct + SdErrPct)) +
+  geom_errorbar(aes(ymin = AttPct/100 - SdErrPct/100, 
+                    ymax = AttPct/100 + SdErrPct/100)) +
   labs(title = "2024-Season Attendance Predictions (version 3)",
        subtitle = "Duke Football Home Games, Wallace Wade Stadium\n
                    Upper Line = Max Capacity, Lower Line = Avg. Attendance 2022-23",
        x = "Opponent Name",
        y = "Predicted Attendance (% of stadium capacity)") +
-  geom_hline(yintercept = 100, color = "red",
+  geom_hline(yintercept = 100/100, color = "red",
              linetype = "dashed", size = 1, alpha = 0.5) +
-  geom_hline(yintercept = 62.07187, color = "blue",
+  geom_hline(yintercept = 62.07187/100, color = "blue",
              linetype = "dashed", size = 1,  alpha = 0.5) +
-  scale_y_continuous(labels = function(x) paste0(x, "%")) +
+  scale_y_continuous(labels = percent,
+                     breaks = seq(from = 0, to = 1.5, by = .2)) +
   annotate("text", x = Inf, y = -Inf, hjust = 1, vjust = 0,
            label = "Predictive model and visualizations developed by Calvin Chen",
            size = 3, color = "gray50")
@@ -1865,7 +1887,7 @@ late_jan_pred_model_data |>
 
 ```{r}
 #| label: late-jan-num
-#| fig-height: 5
+#| fig-height: 6
 #| fig-width: 7 
 
 late_jan_pred_model_data |>
