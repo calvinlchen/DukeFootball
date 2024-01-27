@@ -10,9 +10,9 @@ editor: visual
 
 This document seeks to utilize attendance records of Duke University home football games from previous football seasons to predict the number of attendees at Duke football home games during the 2024 season.
 
-In early January of 2024, initial predictions for 2024 game attendance were created. These were created based on the previous 12 seasons (2011-2023).
+In *Section 1* (early January of 2024), initial predictions for 2024 game attendance were created. These were created based on the previous 12 seasons (2011-2023).
 
-In late January of 2024, a revised dataset containing data from as early as 2001 and including some weather data was implemented. New models and variables were tested.
+In *Section 2* (late January of 2024), a revised dataset containing data from as early as 2001 and including some weather data was implemented. New models and variables were tested.
 
 This document is continually a work in progress.
 
@@ -37,7 +37,9 @@ library(cowplot)
 
 ```
 
-# Importing the Dataset
+# SECTION 1: EARLY JANUARY, 2024
+
+## Importing the Dataset
 
 Summary of Duke football opponents at home (Wallace Wade Stadium) from 2011-2023:
 
@@ -76,7 +78,7 @@ home_opp_list <- c("Elon", "Connecticut", "Florida St.",
 
 ```
 
-# History of At-Home Attendance for 2024 Opponents
+## History of At-Home Attendance for 2024 Opponents
 
 Duke faces against 6 opponents at home in 2024. This section shows every game Duke has played *at home* against these 6 opponents from 2011 through 2023.
 
@@ -88,7 +90,7 @@ It is worth noting that Wallace Wade Stadium attendance capacity changed as a re
 
 Whether a game occurred before or after these renovations is often denoted by color (in this section).
 
-## All Teams
+### All Teams
 
 ```{r}
 #| label: 2024opp-past-attendance
@@ -132,7 +134,7 @@ home_att_data |>
 
 ```
 
-## Elon
+### Elon
 
 ```{r}
 #| label: elon-past-attendance
@@ -150,7 +152,7 @@ home_att_data |>
             "% of Stadium Capacity Filled" = AttPct)
 ```
 
-## Connecticut
+### Connecticut
 
 ```{r}
 #| label: uconn-past-attendance
@@ -170,7 +172,7 @@ home_att_data |>
 
 UConn never faced against Duke in Wallace Wade Stadium from 2011 to 2023.
 
-## Florida St.
+### Florida St.
 
 ```{r}
 #| label: fsu-past-attendance
@@ -188,7 +190,7 @@ home_att_data |>
             "% of Stadium Capacity Filled" = AttPct)
 ```
 
-## North Carolina
+### North Carolina
 
 ```{r}
 #| label: unc-past-attendance
@@ -239,7 +241,7 @@ home_att_data |>
            size = 3, color = "gray50")
 ```
 
-## SMU
+### SMU
 
 ```{r}
 #| label: smu-past-attendance
@@ -259,7 +261,7 @@ home_att_data |>
 
 UConn never faced against Duke in Wallace Wade Stadium from 2011 to 2023.
 
-## Virginia Tech
+### Virginia Tech
 
 ```{r}
 #| label: vtech-past-attendance
@@ -327,11 +329,11 @@ home_att_data |>
            size = 3, color = "gray50")
 ```
 
-# Team Performance vs. Attendance
+## Team Performance vs. Attendance
 
 Can football team performance -- both of Duke and its opponent -- be used to predict the attendance turnout of future Duke home games?
 
-## Previous-Season FPI
+### Previous-Season FPI
 
 This section will seek to determine if the Football Power Index (FPI) of an opposing team at the end of one season is a decent predictor of home-game audience turnout in the *following* season.
 
@@ -377,7 +379,7 @@ The linear model gives the slope of the linear fit depicted in the scatterplot. 
 
 The adjusted r-squared value of about 0.0347 is very low, indicating that while a positive correlation is likely between attendance and opponent previous-season FPI, attendance is likely to also be based on other factors.
 
-### Previous-Season FPI Difference Between Duke & Opponent
+#### Previous-Season FPI Difference Between Duke & Opponent
 
 ```{r}
 #| label: prev-year-fpi-and-diff
@@ -399,11 +401,11 @@ Additionally, this model indicates that when the difference in previous-season F
 
 The adjusted r-squared value of this model is higher than the previous, suggesting that when you consider the FPI difference in addition to the opponent team's FPI, the model better predicts variation in stadium attendance. Thus, we *will* be including the First_Home_Game variable in future models.
 
-## Win History
+### Win History
 
 Does the previous recent winning record of a team matter for a game's attendance level?
 
-### Duke Undefeated Status
+#### Duke Undefeated Status
 
 The following models will investigate if whether Duke being undefeated in a season -- both undefeated at home and undefeated overall -- is related to stadium attendance:
 
@@ -437,7 +439,7 @@ glance(prev_fpi_diff_undef_overall_lm)$adj.r.squared
 
 When considering whether a team is undefeated overall, the result is not significant and results in a lower adjusted R-squared value for the model. However, whether a team is undefeated *at home* does improve the adjusted R-squared value of the model from 0.04277 to 0.04746. The model estimates that stadium attendance slightly *increases* when Duke is undefeated on its home field in a season, but this result is not statistically significant (p = 0.2558).
 
-### Duke Win Streak
+#### Duke Win Streak
 
 Does Duke being on a win streak affect stadium attendance?
 
@@ -497,11 +499,11 @@ home_att_data_prevFPI |>
            size = 3, color = "gray50")
 ```
 
-# Time
+## Time
 
 Do factors related to *when* a game takes place – month, day of the week, etc. – affect our ability to predict future games' attendance?
 
-## Month
+### Month
 
 ```{r}
 #| label: month
@@ -527,7 +529,7 @@ home_att_data |>
 
 Based on the scatterplot above, no obvious correlation is present between game month and attendance for Duke home games. The spread of attendance percentages for games appears independent of the month on which a game occurs.
 
-## Day of Week
+### Day of Week
 
 ```{r}
 #| label: day-of-week
@@ -560,7 +562,7 @@ home_att_data |>
 
 Based on the metrics and scatterplot above, no obvious correlation is present between game month and attendance for Duke home games. The spread of attendance percentages for games appears independent of whether a game occurs on the usual day (Saturday) or not.
 
-## Time of Day
+### Time of Day
 
 ```{r}
 #| label: time-of-day
@@ -611,9 +613,9 @@ The *beta* of the Start_Time variable was around 1.531, suggesting that for ever
 
 However, this does not mean that later start times *cause* greater attendance. Often, games are scheduled for a later hour when they are expected to be more popular, such as during prime-time. It is thus unlikely that many games which TV/sporting organizers expect to have large crowds will be during earlier daylight hours.
 
-# Other Factors
+## Other Factors
 
-## Stadium Renovation
+### Stadium Renovation
 
 Wallace Wade Stadium capacity:
 
@@ -681,7 +683,7 @@ In this model, the adjusted R-squared value is **greatly**improved from the prev
 
 Since all games we will be predicting in future seasons (i.e. 2024) will have taken place after the 2016 renovation, this renovation factor will be an important factor to include in any future prediction models that are based on past Wallace Wade Stadium attendance.
 
-## New Head Coach
+### New Head Coach
 
 Duke has a new head coach in its 2024 season. Does home-game attendance seem to change during the first season a new head coach is present, based on data from 2011-2023?
 
@@ -701,7 +703,7 @@ glance(prev_fpi_diff_coach_lm)$adj.r.squared
 
 The adjusted r-squared value of the model decreases when the coaching variable is introduced, and the p-values become less significant. This suggests that simply having a new head coach does *not* affect home-game attendance. Thus, we will not be including the New_Coach variable in future models.
 
-## First Home Game
+### First Home Game
 
 Does home-game attendance tend to differ when it is the first home game of the season?
 
@@ -721,7 +723,7 @@ glance(prev_fpi_diff_first_lm)$adj.r.squared
 
 The adjusted r-squared value of the model decreases when the First_Home_Game variable is introduced, and the p-values become less significant. This suggests that a game being the *first* home game does *not* affect stadium attendance. Thus, we will not be including the First_Home_Game variable in future models.
 
-## UNC Game
+### UNC Game
 
 Since Duke vs. UNC is a historic rivalry, we will investigate: can a model better predict home-game attendance when it accounts for whether or not UNC is the opponent?
 
@@ -743,11 +745,9 @@ While the p-values were improved in this model, the adjusted R-squared value dec
 
 However, since the adjusted R-squared value of the model decreased as a result of adding the UNC variable, we will not be including the UNC variable it in future models.
 
-# 2024-Season Attendance Predictions
+## 2024-Season Attendance Predictions
 
-## January 2024 Predictions
-
-As of this month (January 2024), some information is not yet available about 2024-season games, such as the time of day and Duke's win-streak standing per game. Many of these factors are to be dynamically determined based on Duke's performance in the 2024 season. However, it is still possible to loosely predict how attendance may look at future games based on the performance of both teams in the 2023 season.
+As of early this month (January 2024), some information is not yet available about 2024-season games, such as the time of day and Duke's win-streak standing per game. Many of these factors are to be dynamically determined based on Duke's performance in the 2024 season. However, it is still possible to loosely predict how attendance may look at future games based on the performance of both teams in the 2023 season.
 
 Out of all the factors we examined within the previous plots and linear regression models in this document, only 3 that were found to have substantial predictive power have the potential to predict 2024-season games at this time:
 
@@ -899,7 +899,7 @@ jan_pred_model_data |>
            size = 3, color = "gray50")
 ```
 
-### Elon
+#### Elon
 
 ```{r}
 #| label: na-fpi
@@ -932,7 +932,7 @@ Since Elon was not rated on the FPI scale last season, they are not able to prod
 
 Thus, based on data available from 2011-2023, we currently estimate an attendance of around 31,000 people at the 2024 Duke v. Elon matchup.
 
-### Florida State
+#### Florida State
 
 While the model predicts an attendance percentage of `{r} FSU_2024_pred` percent, it is likely that the stadium will fill to **100%** capacity. This is because in the 2023 season, FSU achieved 100% attendance at every home game and over 90% attendance (as a percentage of total stadium capacity) in 6 out of 8 away/neutral-location games. At every game, the number of attendees exceeded the total capacity of Wallace Wade Stadium.
 
@@ -1045,7 +1045,7 @@ A linear regression model was created which factored in variables 1-4 listed abo
 
 -   Florida State. The model is believed to have under-predicted the true 2024 value due to Florida State's outstanding 2023 attendance record. Thus, the estimate was raised, but the error bars were tripled in size as a result of the uncertainty of this manual adjustment.
 
-### Future Directions
+## Future Directions
 
 In the months to come, we hope to improve these predictions based on additional factors, such as:
 
@@ -1060,3 +1060,28 @@ In the months to come, we hope to improve these predictions based on additional 
 -   Data-set time frame. The V3 data-set only contains games as early as 2011, but further investigation could be conducted using data that extends farther back in time.
 
 -   New variables. More variables beyond those included in this V3 data-set have the potential to be related to game-time attendance. It could benefit our predictions to investigate the predictive power of additional variables before/during the 2024 season.
+
+# SECTION 2: LATE JANUARY, 2024
+
+Duke's home schedule was recently announced, so this section includes updates to the prediction models based on the new available information. Additionally, the dataset used in this section is improved from section 1, since it includes a more extensive range of years (2001-2023 instead of 2011-2023), new data for weather, and other relatively minor updates and additions.
+
+## Importing the Dataset
+
+```{r}
+#| label: load-data-2
+#| message: false
+#| warning: false
+
+att_data_2 <- read_csv("data/Duke Stats - DukeAttendanceV5.csv")
+
+att_data_2 <- att_data_2 |>
+  mutate(Day = as.factor(Day)) |>
+  mutate(Renovated = Rennovated)
+
+home_att_data_2 <- att_data_2 |>
+  filter(Site == "Home", Year < 2024)
+```
+
+## Testing of Prior Model with New Dataset
+
+Since this section's dataset contains more rows, we will examine if the section-one prediction model is any stronger when given the new data.
