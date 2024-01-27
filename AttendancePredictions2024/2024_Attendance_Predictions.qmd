@@ -1,6 +1,6 @@
 ---
 title: "Predictions for 2024-Season Duke Football Attendance"
-subtitle: "Based on 2011-2023 Home-Game Attendance Records"
+subtitle: "Based on Previous Home-Game Attendance Records"
 author: "Calvin Chen"
 format: pdf
 editor: visual
@@ -8,9 +8,13 @@ editor: visual
 
 # Overview
 
-This document seeks to utilize attendance records of Duke University home football games from the previous 12 seasons (2011-2023) to predict the number of attendees at Duke football home games during the 2024 season.
+This document seeks to utilize attendance records of Duke University home football games from previous football seasons to predict the number of attendees at Duke football home games during the 2024 season.
 
-In January 2024, initial predictions for 2024 game attendance were created. (These are given in the final section of this document.)
+In early January of 2024, initial predictions for 2024 game attendance were created. These were created based on the previous 12 seasons (2011-2023).
+
+In late January of 2024, a revised dataset containing data from as early as 2001 and including some weather data was implemented. New models and variables were tested.
+
+This document is continually a work in progress.
 
 ## Purpose
 
