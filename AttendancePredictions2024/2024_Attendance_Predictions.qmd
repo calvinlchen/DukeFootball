@@ -12,7 +12,7 @@ This document seeks to utilize attendance records of Duke University home footba
 
 In *Section 1* (early January of 2024), initial predictions for 2024 game attendance were created. These were created based on the previous 12 seasons (2011-2023).
 
-In *Section 2* (late January of 2024), a revised dataset containing data from as early as 2001 and including some weather data was implemented. New models and variables were tested.
+In *Section 2* (late January of 2024), a revised dataset containing data from as early as 2001 and including some weather data was implemented. New models and variables were tested, and new, more confident predictions for 2024 attendance were made.
 
 This document is continually a work in progress.
 
@@ -1072,7 +1072,7 @@ Duke's home schedule was recently announced, so this section includes updates to
 #| message: false
 #| warning: false
 
-att_data_2 <- read_csv("data/Duke Stats - DukeAttendanceV6.csv")
+att_data_2 <- read_csv("data/Duke Stats - DukeAttendanceV7.csv")
 
 att_data_2 <- att_data_2 |>
   mutate(NumericalDate = (Month-8)*100 + Date/31*100) |>
@@ -1646,6 +1646,97 @@ glance(nc_opp_lm)$adj.r.squared
 
 There is strong evidence that **stadium attendance increases when Duke's opponent is a school located in North Carolina.** On average, NC opponents had an audience increase of 4,058 people per game. The p-value of this *beta* is roughly 0.002.
 
+## Opponent City's Distance from Durham, NC
+
+```{r}
+#| label: opp-dist
+#| message: FALSE
+#| warning: FALSE
+
+opp_dist_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ log(OppCityDist), data = home_att_data_2)
+
+tidy(opp_dist_lm)
+glance(opp_dist_lm)$adj.r.squared
+```
+
+There is evidence that **when the distance between Duke and its opponent school increases, attendance tends to decrease** in a logarithmic pattern. The p-value of this *beta* is \<0.0001. *This relationship is visualized below:*
+
+```{r}
+#| label: opp-dist-visualization
+#| message: FALSE
+#| warning: FALSE
+
+home_att_data_2 |>
+  ggplot(
+    aes(x = OppCityDist, y = AttNum)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y~log(x)) +
+  labs(title = "Opponent School Distance vs. Duke Home-Game Attendance",
+       subtitle = "Duke Football; Wallace Wade Stadium; 2001-2023",
+       x = "Opponent Hometown Distance from Durham, NC (miles)",
+       y = "Attendance (# of people)")
+```
+
+## Win Performance
+
+Now that data from earlier years is available, we will investigate whether Duke's football record (such as win streak and undefeated status) by a game's start time correlates with game attendance.
+
+### Win Streak
+
+```{r}
+#| label: win-streak-2001
+#| message: FALSE
+#| warning: FALSE
+
+win_streak_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ poly(Win_Streak, 2), data = home_att_data_2)
+
+tidy(win_streak_lm)
+glance(win_streak_lm)$adj.r.squared
+
+```
+
+There is evidence that **Duke's consecutive** **win streak is positively related to stadium attendance**. While there is not statistically significant evidence that this relationship is quadratic in nature, there is at least a statistically significant positive relationship between win streak and attendance (p = 0.0167). This relationship is visualized below:
+
+```{r}
+#| label: win-streak-visualization
+#| message: FALSE
+#| warning: FALSE
+
+home_att_data_2 |>
+  ggplot(
+    aes(x = Win_Streak, y = AttNum)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y~poly(x, 2)) +
+  labs(title = "Duke Win Streak vs. Duke Home-Game Attendance",
+       subtitle = "Duke Football; Wallace Wade Stadium; 2001-2023",
+       x = "Number of Previous Consecutive Wins (before game start)",
+       y = "Attendance (# of people)")
+
+```
+
+### Undefeated in Season
+
+```{r}
+#| label: undefeated-season
+#| message: FALSE
+#| warning: FALSE
+
+undefeated_season_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Undefeated_All, data = home_att_data_2)
+
+tidy(undefeated_season_lm)
+glance(undefeated_season_lm)$adj.r.squared
+```
+
+Whether or not Duke is undefeated in a season by the time a game occurs does **not** seem to have a statistically significant correlation to game attendance.
+
 ## Summary of Significant Variables
 
 Stadium attendance tended to *increase* when:
@@ -1662,11 +1753,15 @@ Stadium attendance tended to *increase* when:
 
 -   the opponent's school is located in NC.
 
+-   Duke had consecutive wins before game-time.
+
 Stadium attendance tended to *decrease* when:
 
 -   precipitation occurred during the game.
 
 -   humidity was higher during the game. (likely related to rainfall)
+
+-   distance increased between Durham, NC, and the opponent school's hometown.
 
 The following variables historically had no statistically significant impact on home-game attendance:
 
@@ -1682,11 +1777,13 @@ The following variables historically had no statistically significant impact on 
 
 -   Florida State was the opponent.
 
+-   Whether Duke was undefeated in the season by game-time.
+
 Some factors, such as time of day and win streak, were not reviewed in this section because they are not currently useful to our 2024 home-game predictions.
 
 ## Updated Model
 
-The model below utilizes variables in this section that were deemed statistically significant: Cutcliffe, previous-season FPI, first-game status, UNC, and ranked-opponent status:
+The model below utilizes variables in this section that were deemed statistically significant:
 
 ```{r}
 #| label: late-jan-prediction-model-RAW
@@ -1697,7 +1794,8 @@ late_jan_pred_lm <- linear_reg() |>
   set_engine("lm") |>
   fit(AttNum ~ Cutcliffe + OppFPI_PrevYear +
         First_Game + UNC_Game + NC_Opponent +
-        OppRankedGametime,
+        OppRankedGametime + log(OppCityDist) +
+        Humidity + Rain + poly(Win_Streak, 2),
       data = home_att_data_2)
 
 tidy(late_jan_pred_lm)
@@ -1705,7 +1803,9 @@ glance(late_jan_pred_lm)$adj.r.squared
 
 ```
 
-Below are models that combine the variables from Section 1 with the variables explored in the model above to create models with higher adjusted r-squared values:
+However, not all variables used above are currently available to be used to predict 2024 games. For example, it is not possible to know whether it will be raining or not during games in 2024, or to know if Duke will have a consecutive win streak before each game. So, we have to create additional models that only include variables we are more confident in knowing ahead of time.
+
+Below are such models that combine the variables from Section 1with the variables explored in the model above *(except for currently non-certain variables)* to create models with higher adjusted r-squared values:
 
 ```{r}
 #| label: late-jan-prediction-model-MERGE
@@ -1715,8 +1815,8 @@ Below are models that combine the variables from Section 1 with the variables ex
 late_jan_pred_lm_merge <- linear_reg() |>
   set_engine("lm") |>
   fit(AttNum ~ Cutcliffe * OppFPI_PrevYear *
-        First_Game + UNC_Game + OppRankedGametime +
-        FPI_Diff_PrevYear + Renovated + Day,
+        First_Game * OppRankedGametime * log(OppCityDist) +
+        FPI_Diff_PrevYear + Renovated + UNC_Game + Day,
       data = home_att_data_2)
 
 tidy(late_jan_pred_lm_merge)
@@ -1724,13 +1824,14 @@ glance(late_jan_pred_lm_merge)$adj.r.squared
 
 late_jan_pred_lm_merge_noFPI <- linear_reg() |>
   set_engine("lm") |>
-  fit(AttNum ~ Cutcliffe + First_Game + 
-        UNC_Game + OppRankedGametime *
-        Renovated + Day + Win_Streak + NC_Opponent,
+  fit(AttNum ~ Cutcliffe * First_Game * 
+        log(OppCityDist) * OppRankedGametime *
+        Renovated + UNC_Game + Day + Win_Streak,
       data = home_att_data_2)
 
 tidy(late_jan_pred_lm_merge_noFPI)
 glance(late_jan_pred_lm_merge_noFPI)$adj.r.squared
+
 ```
 
 The second model out of the two above does not contain variables related to FPI. This model will be used for Elon only since it has weaker predictive power and because no FPI values are available from ESPN for Elon.
@@ -1803,6 +1904,7 @@ SMU_2024_pred <- predict(late_jan_pred_lm_merge$fit,
                          se.fit = TRUE)
 SMU_2024_pred_se <- SMU_2024_pred$se.fit
 #SMU_2024_pred
+#SMU_2024_pred_se
 
 VT_2024 <- att_data_2 |>
   filter(Year == 2024, OppName == "Virginia Tech")
@@ -1851,8 +1953,8 @@ late_jan_pred_model_data <- late_jan_pred_model_output |>
 
 ```{r}
 #| label: late-jan-pct
-#| fig-height: 6
-#| fig-width: 7 
+#| fig-height: 5
+#| fig-width: 6 
 
 late_jan_pred_model_data |>
   ggplot(
@@ -1868,11 +1970,12 @@ late_jan_pred_model_data |>
   geom_point() +
   geom_errorbar(aes(ymin = AttPct/100 - SdErrPct/100, 
                     ymax = AttPct/100 + SdErrPct/100)) +
-  labs(title = "2024-Season Attendance Predictions (version 3)",
-       subtitle = "Duke Football Home Games, Wallace Wade Stadium\n
-                   Upper Line = Max Capacity, Lower Line = Avg. Attendance 2022-23",
+  labs(title = "2024-Season Attendance Predictions (version 4)",
+       subtitle = "Duke Football Home Games, Wallace Wade Stadium.\n
+                   Red Line = MAX Stadium Capacity\n
+                   Blue Line = Avg. Home-Game Attendance 2022-2023",
        x = "Opponent Name",
-       y = "Predicted Attendance (% of stadium capacity)") +
+       y = "Predicted Attendance (% of max capacity)") +
   geom_hline(yintercept = 100/100, color = "red",
              linetype = "dashed", size = 1, alpha = 0.5) +
   geom_hline(yintercept = 62.07187/100, color = "blue",
@@ -1887,8 +1990,8 @@ late_jan_pred_model_data |>
 
 ```{r}
 #| label: late-jan-num
-#| fig-height: 6
-#| fig-width: 7 
+#| fig-height: 5
+#| fig-width: 6 
 
 late_jan_pred_model_data |>
   ggplot(
@@ -1903,9 +2006,10 @@ late_jan_pred_model_data |>
   ) +
   geom_point() +
   geom_errorbar(aes(ymin = AttNum - SdErr, ymax = AttNum + SdErr)) +
-  labs(title = "2024-Season Attendance Predictions (version 3)",
-       subtitle = "Duke Football Home Games, Wallace Wade Stadium\n
-                   Upper Line = Max Capacity, Lower Line = Avg. Attendance 2022-23",
+  labs(title = "2024-Season Attendance Predictions (version 4)",
+       subtitle = "Duke Football Home Games, Wallace Wade Stadium.\n
+                   Red Line = MAX Stadium Capacity (40,004)\n
+                   Blue Line = Avg. Home-Game Attendance 2022-2023",
        x = "Opponent Name",
        y = "Predicted Attendance (# of people)") +
   geom_hline(yintercept = 40004, color = "red",
@@ -1918,6 +2022,8 @@ late_jan_pred_model_data |>
 
 ```
 
-The graphs above do take predictive liberties by assuming that *Florida State* will be *ranked* (in the top 25) at game-time.
+The graphs above do take predictive liberties by assuming that **only** Florida State will be *ranked* (in the top 25) at game-time.
+
+Also, to repeat, note that the above predictions are limited by current lack of information about the 2024 season. For instance, we do not know what Duke's win streak will be leading up to any of these games, which if known would likely change the attendance prediction.
 
 **Additional Commentary Coming Soon.**
