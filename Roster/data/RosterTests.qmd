@@ -1,0 +1,37 @@
+---
+title: "Predictions for 2024-Season Duke Football Performance"
+subtitle: "Based on Team Roster Metrics"
+author: "Calvin Chen"
+format: pdf
+editor: visual
+---
+
+```{r}
+#| label: load-packages
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(tidymodels)
+library(cowplot)
+```
+
+```{r}
+#| label: load-data
+#| message: false
+#| warning: false
+
+data <- read_csv("Duke Roster and Performance Data.csv")
+
+data <- data |>
+  mutate(coachElko = if_else(Coach == "Elko", TRUE, FALSE))
+```
+
+```{r}
+data |>
+  ggplot(
+    aes(x = class_score, y = overallPct, color = coachElko)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
