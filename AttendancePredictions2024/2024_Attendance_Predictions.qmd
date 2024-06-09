@@ -1482,6 +1482,38 @@ Surprisingly, there is some evidence that **games with greater humidity have sli
 
 ## Time
 
+### Year
+
+```{r}
+#| label: year-model
+#| message: FALSE
+#| warning: FALSE
+
+year_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ poly(Year,2), data = home_att_data_2)
+
+tidy(year_lm)
+glance(year_lm)$adj.r.squared
+
+home_att_data_2 |>
+  ggplot(
+    aes(x = Year, y = AttNum)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm", formula = y~poly(x,2)) +
+  labs(title = "Year vs. Duke Home-Game Attendance",
+       subtitle = "Duke Football; Wallace Wade Stadium; 2001-2023",
+       x = "Year of Game",
+       y = "Attendance (# of people)")
+```
+
+Game year is one of the best predictors of stadium attendance so far, with a p-value \<0.01. The relationship appears to be a quadratic one, with home-game attendance rising to its peak at around 2014 before falling again in subsequent years.
+
+Despite this variable's high strong statistical significance, we will not use it in final predictions because it seems to be caused by factors that this model would not suggest. For example, during the year after COVID, the team was performing especially poorly under its previous coach, and COVID was still a widespread concern. Both of these factors are ones which cause the attendance figures to dip especially drastically after the year 2020, yet these are factors which we do not expect will have an effect in 2024.
+
+Ultimately, we will not use "Year" as a variable in our 2024 predictions because we believe its quadratic nature will cause the predictions to underestimate true 2024 attendance.
+
 ### Date
 
 A new variable, *numericDate*, is introduced. It is calculated by the following:
@@ -1795,7 +1827,8 @@ late_jan_pred_lm <- linear_reg() |>
   fit(AttNum ~ Cutcliffe + OppFPI_PrevYear +
         First_Game + UNC_Game + NC_Opponent +
         OppRankedGametime + log(OppCityDist) +
-        Humidity + Rain + poly(Win_Streak, 2),
+        Humidity + Rain + poly(Win_Streak, 2) +
+        poly(Year,2),
       data = home_att_data_2)
 
 tidy(late_jan_pred_lm)
@@ -1814,9 +1847,10 @@ Below are such models that combine the variables from Section 1with the variable
 
 late_jan_pred_lm_merge <- linear_reg() |>
   set_engine("lm") |>
-  fit(AttNum ~ Cutcliffe * OppFPI_PrevYear *
-        First_Game * OppRankedGametime * log(OppCityDist) +
-        FPI_Diff_PrevYear + Renovated + UNC_Game + Day,
+  fit(AttNum ~ Cutcliffe * OppFPI_PrevYear * First_Game *
+        OppRankedGametime * log(OppCityDist) + 
+        FPI_Diff_PrevYear + Renovated +
+        UNC_Game + onSaturday,
       data = home_att_data_2)
 
 tidy(late_jan_pred_lm_merge)
@@ -1824,9 +1858,9 @@ glance(late_jan_pred_lm_merge)$adj.r.squared
 
 late_jan_pred_lm_merge_noFPI <- linear_reg() |>
   set_engine("lm") |>
-  fit(AttNum ~ Cutcliffe * First_Game * 
+  fit(AttNum ~ Cutcliffe * First_Game *
         log(OppCityDist) * OppRankedGametime *
-        Renovated + UNC_Game + Day + Win_Streak,
+        Renovated + UNC_Game + onSaturday + Win_Streak,
       data = home_att_data_2)
 
 tidy(late_jan_pred_lm_merge_noFPI)
@@ -1970,7 +2004,7 @@ late_jan_pred_model_data |>
   geom_point() +
   geom_errorbar(aes(ymin = AttPct/100 - SdErrPct/100, 
                     ymax = AttPct/100 + SdErrPct/100)) +
-  labs(title = "2024-Season Attendance Predictions (version 4)",
+  labs(title = "2024-Season Attendance Predictions (version 5)",
        subtitle = "Duke Football Home Games, Wallace Wade Stadium.\n
                    Red Line = MAX Stadium Capacity\n
                    Blue Line = Avg. Home-Game Attendance 2022-2023",
@@ -2006,7 +2040,7 @@ late_jan_pred_model_data |>
   ) +
   geom_point() +
   geom_errorbar(aes(ymin = AttNum - SdErr, ymax = AttNum + SdErr)) +
-  labs(title = "2024-Season Attendance Predictions (version 4)",
+  labs(title = "2024-Season Attendance Predictions (version 5)",
        subtitle = "Duke Football Home Games, Wallace Wade Stadium.\n
                    Red Line = MAX Stadium Capacity (40,004)\n
                    Blue Line = Avg. Home-Game Attendance 2022-2023",
@@ -2027,3 +2061,88 @@ The graphs above do take predictive liberties by assuming that **only** Florida 
 Also, to repeat, note that the above predictions are limited by current lack of information about the 2024 season. For instance, we do not know what Duke's win streak will be leading up to any of these games, which if known would likely change the attendance prediction.
 
 **Additional Commentary Coming Soon.**
+
+## Testing Various Hypothetical Conditions
+
+```{r}
+#| label: hypothetical-models-1
+#| message: FALSE
+#| warning: FALSE
+
+hyp_lm_1 <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Cutcliffe * OppFPI_PrevYear *
+        First_Game * log(OppCityDist) + OppRankedGametime + 
+        FPI_Diff_PrevYear + Renovated + UNC_Game + onSaturday +
+        Undefeated_All + Rain,
+      data = home_att_data_2)
+
+tidy(hyp_lm_1)
+glance(hyp_lm_1)$adj.r.squared
+
+hyp_lm_noFPI_1 <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Cutcliffe *  First_Game *
+        log(OppCityDist) * OppRankedGametime *
+        Renovated + UNC_Game + onSaturday +
+        Win_Streak + Rain + NC_Opponent + OppCityDist,
+      data = home_att_data_2)
+
+tidy(hyp_lm_noFPI_1)
+glance(hyp_lm_noFPI_1)$adj.r.squared
+```
+
+```{r}
+#| label: indiv-pred
+
+individual_test <- tibble(
+  Name = "UConn",
+  OppFPI_PrevYear = -15.7,
+  FPI_Diff_PrevYear = -24.6,
+  onSaturday = TRUE,
+  Renovated = TRUE,
+  UNC_Game = FALSE,
+  First_Game = FALSE,
+  Cutcliffe = FALSE,
+  OppRankedGametime = TRUE,
+  Undefeated_All = FALSE,
+  Win_Streak = NA,
+  NC_Opponent = FALSE,
+  OppCityDist = 537.14,
+  Rain = TRUE
+)
+
+
+individual_test_pred <- predict(hyp_lm_1$fit,
+                          individual_test,
+                          type = "response",
+                          se.fit = TRUE)
+individual_test_pred_se <- individual_test_pred$se.fit
+individual_test_pred
+#individual_test_pred_se
+
+
+```
+
+# May 30 Update
+
+Start times are now known for some games.
+
+```{r}
+#| label: may-prediction-model-RAW
+#| message: FALSE
+#| warning: FALSE
+
+may_pred_lm <- linear_reg() |>
+  set_engine("lm") |>
+  fit(AttNum ~ Cutcliffe + OppFPI_PrevYear +
+        First_Game + UNC_Game + NC_Opponent +
+        OppRankedGametime + log(OppCityDist) +
+        Humidity + Rain + poly(Win_Streak, 2) +
+        poly(Year,2) + exp(Start_Time),
+      data = home_att_data_2)
+
+tidy(may_pred_lm)
+glance(may_pred_lm)$adj.r.squared
+
+```
