@@ -24,14 +24,86 @@ library(cowplot)
 data <- read_csv("Duke Roster and Performance Data.csv")
 
 data <- data |>
-  mutate(coachElko = if_else(Coach == "Elko", TRUE, FALSE))
+  mutate(coachElko = if_else(Coach == "Elko", TRUE, FALSE)) |>
+  mutate(teamAge = (pctFreshmen*1 + pctSophomores*2 + pctJuniors*3 + pctSeniors*4))
 ```
 
 ```{r}
 data |>
   ggplot(
-    aes(x = class_score, y = overallPct, color = coachElko)
+    aes(x = pctJuniors, y = overallPct)
   ) +
   geom_point() +
   geom_smooth(method = "lm")
+
+
+model <- linear_reg() |>
+  set_engine("lm") |>
+  fit(overallPct ~ poly(FPI_rank,2) + (SOS_rank) * log(class_score), data = data)
+tidy(model)
+glance(model)$adj.r.squared
+
+
+model2 <- linear_reg() |>
+  set_engine("lm") |>
+  fit(overallPct ~ poly(FPI_rank,2) + (SOS_rank) * (class_confRank), data = data)
+tidy(model2)
+glance(model2)$adj.r.squared
+```
+
+```{r}
+# 2024 data for predictions
+data_2024 <- data.frame(
+  year = 2024,
+  FPI_rank = 52,
+  SOS_rank = 61,
+  class_confRank = 14,
+  class_score = 85.75
+)
+
+# Make predictions
+prediction <- predict(model2$fit, data_2024, interval = "confidence")
+
+# View predictions
+print(prediction)
+```
+
+Training and testing group:
+
+```{r}
+# Split the data into training and testing sets
+random_seed <- sample(1:1000, 1)  # Generate a random seed between 1 and 1000
+print(paste("Random seed:", random_seed))
+set.seed(random_seed)
+data_split <- initial_split(data, prop = 0.9)
+training_data <- training(data_split)
+testing_data <- testing(data_split)
+
+# Train the model
+model2 <- linear_reg() |>
+  set_engine("lm") |>
+  fit(overallPct ~ poly(FPI_rank,2) + (SOS_rank) * (class_confRank), data = data)
+tidy(model2)
+glance(model2)$adj.r.squared
+
+# Make predictions on the testing set
+predictions <- predict(model2, new_data = testing_data)
+
+# Add predictions to the testing data
+testing_data <- testing_data %>%
+  bind_cols(predictions)
+
+# View the predictions
+print_data <- testing_data |>
+  select(c('Year', 'overallPct', '.pred'))
+View(print_data)
+
+# Load yardstick for evaluation metrics
+library(yardstick)
+
+# Calculate performance metrics
+metrics <- testing_data %>%
+  metrics(truth = overallPct, estimate = .pred)
+
+print(metrics)
 ```
