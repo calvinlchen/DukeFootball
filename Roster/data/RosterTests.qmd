@@ -26,6 +26,8 @@ data <- read_csv("Duke Roster and Performance Data.csv")
 data <- data |>
   mutate(coachElko = if_else(Coach == "Elko", TRUE, FALSE)) |>
   mutate(teamAge = (pctFreshmen*1 + pctSophomores*2 + pctJuniors*3 + pctSeniors*4))
+
+data
 ```
 
 ```{r}
@@ -106,4 +108,217 @@ metrics <- testing_data %>%
   metrics(truth = overallPct, estimate = .pred)
 
 print(metrics)
+```
+
+# New Data: starting at 2005, rather than 2012
+
+```{r}
+#| label: load-2005-data
+#| message: false
+#| warning: false
+
+data_2005 <- read_csv("Duke Roster and Performance Data - v2.csv")
+
+data_2005 <- data_2005 |>
+  mutate(coachElko = if_else(Coach == "Elko", TRUE, FALSE),
+         coachCutcliffe = if_else(Coach == "Cutcliffe", TRUE, FALSE),
+         coachRoof = if_else(Coach == "Roof", TRUE, FALSE),
+         teamAge = ( numRedshirting+numFreshmen)*1 + (numSophomores+numRedshirtFreshmen)*2 +
+           (numJuniors+numRedshirtSophomores)*3 + (numSeniors+numRedshirtJuniors)*4 + (numGrad+numRedshirtSeniors)*5 )
+
+data_2005
+
+data_2024 <- read_csv("Duke Roster and Performance Data - 2024.csv")
+data_2024 <- data_2024 |>
+  mutate(coachElko = if_else(Coach == "Elko", TRUE, FALSE),
+         coachCutcliffe = if_else(Coach == "Cutcliffe", TRUE, FALSE),
+         coachRoof = if_else(Coach == "Roof", TRUE, FALSE),
+         teamAge = ( numRedshirting+numFreshmen)*1 + (numSophomores+numRedshirtFreshmen)*2 +
+           (numJuniors+numRedshirtSophomores)*3 + (numSeniors+numRedshirtJuniors)*4 + (numGrad+numRedshirtSeniors)*5 )
+
+data_2024
+
+```
+
+# 
+
+```{r}
+#| label: weight-and-height
+
+data_2005 |>
+  ggplot(
+    aes(x = avgWeight, y = avgHeight)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+data_2005 |>
+  ggplot(
+    aes(x = avgHeight, y = overallPct, color = Year)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+data_2005 |>
+  ggplot(
+    aes(x = avgWeight, y = overallPct, color = Year)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+```
+
+```{r}
+#| label: prev-model
+
+data_2005 |>
+  ggplot(
+    aes(x = numPlayers, y = overallPct)
+  ) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+
+model <- linear_reg() |>
+  set_engine("lm") |>
+  fit(overallPct ~ poly(FPI_rank,2) + (SOS_rank) * exp(class_score) + avgHeight, data = data_2005)
+tidy(model)
+glance(model)
+
+
+model2 <- linear_reg() |>
+  set_engine("lm") |>
+  fit(overallPct ~ poly(FPI_rank,2) + (SOS_rank) * (class_confRank), data = data_2005)
+tidy(model2)
+glance(model2)
+
+```
+
+```{r}
+# Split the data into training and testing sets
+random_seed <- sample(1:1000, 1)  # Generate a random seed between 1 and 1000
+print(paste("Random seed:", random_seed))
+set.seed(random_seed)
+data_split <- initial_split(data_2005, prop = 0.80)
+training_data <- training(data_split)
+testing_data <- testing(data_split)
+
+# Train the model
+pred_model <- linear_reg() |>
+  set_engine("lm") |>
+  fit(overallPct ~ poly(FPI_rank,2) + (SOS_rank) * (class_score), data = training_data)
+#tidy(pred_model)
+glance(pred_model)
+
+# Make predictions on the testing set
+predictions <- predict(pred_model$fit, newdata = testing_data, interval = "confidence")
+
+# Add predictions to the testing data
+#View(predictions)
+testing_data <- testing_data |>
+  bind_cols(predictions)
+
+# View the predictions
+print_data <- testing_data |>
+  select(c('Year', 'overallPct', 'fit', 'lwr', 'upr'))
+View(print_data)
+
+# Load yardstick for evaluation metrics
+library(yardstick)
+
+# Calculate performance metrics
+metrics <- testing_data |>
+  metrics(truth = overallPct, estimate = fit)
+
+print(metrics)
+```
+
+```{r}
+#| label: bootstrap-test
+
+# Define the resampling strategy
+set.seed(1234)
+boot_splits <- bootstraps(data_2005, times = 100)
+
+# Define the model
+model_spec <- linear_reg() |>
+  set_engine("lm")
+
+# Define the workflow
+workflow <- workflow() |>
+  add_model(model_spec) |>
+  add_formula(overallPct ~ poly(FPI_rank,2) + (SOS_rank) * (class_score) + avgHeight+avgWeight)
+
+# Perform resampling
+boot_results <- workflow |>
+  fit_resamples(resamples = boot_splits, metrics = metric_set(rmse, rsq, mae))
+
+# Collect and summarize the metrics
+metrics_summary <- boot_results |>
+  collect_metrics()
+
+print(metrics_summary)
+
+```
+
+```{r}
+#| label: bootstrap-test-2
+
+library(dplyr)
+library(purrr)
+
+# Define the resampling strategy
+set.seed(1234)
+boot_splits <- bootstraps(data_2005, times = 1000)
+
+# Define the model
+model_spec <- linear_reg() |>
+  set_engine("lm")
+
+# Define the workflow
+workflow <- workflow() |>
+  add_model(model_spec) |>
+  add_formula(overallPct ~ poly(FPI_rank,2) + (SOS_rank) * log(class_score) + avgHeight+avgWeight)
+
+# Perform resampling (training on bootstrap samples)
+boot_results <- workflow |>
+  fit_resamples(resamples = boot_splits, metrics = metric_set(rmse, rsq, mae))
+
+# Collect and summarize the metrics
+metrics_summary <- boot_results |>
+  collect_metrics()
+
+print(metrics_summary)
+
+# Manually extract fitted models and make predictions
+fitted_models <- boot_splits$splits |>
+  map(~ {
+    # Set a different seed for each bootstrap sample
+    set.seed(NULL)
+    set.seed(sample.int(10^5, 1))  # Set a different seed for each sample
+    # Extract the training data
+    train_data <- analysis(.x)
+    # Fit the model
+    model_fit <- workflow %>% fit(data = train_data)
+    # Return the fitted model
+    model_fit
+  })
+
+# Predict on new data using each bootstrap model
+boot_predictions <- fitted_models |>
+  map(~ predict(.x, data_2024)$.pred)
+
+# Combine predictions into a single vector
+boot_predictions_vec <- unlist(boot_predictions)
+
+# Aggregate predictions
+final_new_prediction <- mean(boot_predictions_vec, na.rm = TRUE)
+
+# Calculate confidence intervals (95% CI)
+lower_ci <- quantile(boot_predictions_vec, 0.025, na.rm = TRUE)
+upper_ci <- quantile(boot_predictions_vec, 0.975, na.rm = TRUE)
+
+# Print final prediction for new data with confidence intervals
+cat("Final Prediction:", final_new_prediction, "\n")
+cat("95% Confidence Interval: [", lower_ci, ", ", upper_ci, "]\n")
 ```
