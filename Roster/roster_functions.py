@@ -1,14 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.feature_selection import RFE
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.metrics import mean_absolute_error
+# from sklearn.metrics import make_scorer
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import GridSearchCV, LeaveOneOut, train_test_split
+from sklearn.preprocessing import StandardScaler
 
 
 # Load all columns from the dataset
@@ -80,8 +81,20 @@ def performPCA(X, n_components):
     return pc_df, pca
 
 
+def performPCA_separateSets(X_train, X_test, n_components, seed):
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    pca = PCA(n_components=n_components, random_state=seed)
+    X_train_pca = pca.fit_transform(X_train_scaled)
+    X_test_pca = pca.transform(X_test_scaled)
+
+    return X_train_pca, X_test_pca
+
+
 # Split data into train and test sets
-def splitTrainingTestingSets(X, y, test_size, seed):
+def splitTrainingTesting(X, y, test_size, seed):
     X_train, X_test, y_train, y_test = train_test_split(X,
                                                         y,
                                                         test_size=test_size,
@@ -89,10 +102,8 @@ def splitTrainingTestingSets(X, y, test_size, seed):
     return X_train, X_test, y_train, y_test
 
 
-def createRF(X_train, X_test, y_train, y_test, seed):
-    model = RandomForestRegressor(bootstrap=True, 
-                                  n_estimators=1000, 
-                                  random_state=seed)
+def createRF(X_train, X_test, y_train, y_test, params, seed):
+    model = RandomForestRegressor(random_state=seed, **params)
 
     # Train the model
     model.fit(X_train, y_train)
@@ -116,14 +127,55 @@ def createRF(X_train, X_test, y_train, y_test, seed):
            title='Distribution of Prediction Errors')
     ax.grid(True)
     plt.show()
+    return model
+
+
+# Custom scorer function to calculate adjusted R^2
+def adjusted_r2_scorer(estimator, X, y):
+    print(X)
+    print(y)
+    print(estimator.predict(X))
+    r2 = r2_score(y, estimator.predict(X))
+    n = X.shape[0]
+    p = X.shape[1]
+    adjusted_r2 = 1 - (1 - r2) * (n - 1) / (n - p - 1)
+    return adjusted_r2
+
+
+def hypertune_model(X_train_pca, y_train):
+    # Make a adj-r^2 scorer from the custom scorer function:
+    # adjusted_r2 = make_scorer(adjusted_r2_scorer, greater_is_better=True)
+
+    model = RandomForestRegressor(random_state=42)
+
+    param_grid = {
+        'n_estimators': [100, 500, 1000, 1500, 2000],
+        'max_depth': [None, 10, 20, 30, 40, 50],
+        'min_samples_split': [2, 5, 10, 15, 20],
+        'min_samples_leaf': [1, 2, 4, 6, 8],
+        'max_features': ['sqrt', 'log2', None],
+        'bootstrap': [True, False],
+        'max_leaf_nodes': [None, 2, 5, 10, 15, 20]
+    }
+
+    grid_search = GridSearchCV(model, param_grid, verbose=3,
+                               cv=LeaveOneOut(), n_jobs=-1,
+                               scoring='neg_mean_squared_error',)
+                            
+    grid_search.fit(X_train_pca, y_train)
+
+    print(f"Best parameters found: {grid_search.best_params_}")
+    print(f"Best neg. mean squared error (MSE): {grid_search.best_score_:.4f}")
+
+    return grid_search.best_params_
 
 
 # show all stats for features used in model (importance, correlation, ranking)
 def allFeatureStats(model, data, X, X_train, y_train, target):
-    featureImportance(model)
+    featureImportance(model, X)
     correlationMatrix(data, target)
-    rfe(model, X_train, y_train)
-    anova(X_train, y_train)
+    rfe(model, X_train, y_train, X)
+    anova(X_train, y_train, X)
 
 
 # Feature Importances
