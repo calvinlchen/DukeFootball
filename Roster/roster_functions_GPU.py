@@ -1,15 +1,14 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
+import xgboost as xgb
+import lightgbm as lgb
+
 from sklearn.decomposition import PCA
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.feature_selection import RFE
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import mean_absolute_error
-# from sklearn.metrics import make_scorer
-from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.model_selection import GridSearchCV, LeaveOneOut, train_test_split
 from sklearn.preprocessing import StandardScaler
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 
 # Load all columns from the dataset
@@ -58,7 +57,6 @@ def performPCA(X, n_components):
     pd.DataFrame: The transformed dataset with reduced dimensions.
     PCA: The fitted PCA object.
     """
-
     # Standardizing the features
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
@@ -102,8 +100,17 @@ def splitTrainingTesting(X, y, test_size, seed):
     return X_train, X_test, y_train, y_test
 
 
-def createRF(X_train, X_test, y_train, y_test, params, seed):
-    model = RandomForestRegressor(random_state=seed, **params)
+def createXGBoost(X_train, X_test, y_train, y_test, params, seed):
+
+    # Convert training and testing data to DMatrix format
+    # dtrain = xgb.DMatrix(X_train, label=y_train)
+    # dtest = xgb.DMatrix(X_test, label=y_test)
+
+    model = xgb.XGBRegressor(random_state=seed,
+                             tree_method="hist",
+                             device='cuda',
+                             verbosity=2,
+                             **params)
 
     # Train the model
     model.fit(X_train, y_train)
@@ -130,11 +137,38 @@ def createRF(X_train, X_test, y_train, y_test, params, seed):
     return model
 
 
+def createLightGBM(X_train, X_test, y_train, y_test, params, seed):
+    model = lgb.LGBMRegressor(random_state=seed, num_threads=6,
+                              force_col_wise=True, **params)
+    model.fit(X_train, y_train,
+              eval_set=[(X_test, y_test)],
+              eval_metric='l1')  # Mean Absolute Error for evaluation
+
+    # Predict on the test set
+    y_pred = model.predict(X_test)
+
+    # Evaluate the model
+    print("Mean Absolute Error:", mean_absolute_error(y_test, y_pred))
+    print("Mean Squared Error:", mean_squared_error(y_test, y_pred))
+    print("R² Score:", r2_score(y_test, y_pred))
+
+    results = y_pred - y_test
+    unique, counts = np.unique(results, return_counts=True)
+
+    # Plot residuals
+    fig = plt.figure(num=1, clear=True)
+    ax = fig.add_subplot(1, 1, 1)
+    ax.hist(results, bins=50)
+    ax.set(xlabel='Error', ylabel='Counts',
+           title='Distribution of Prediction Errors')
+    ax.grid(True)
+    plt.show()
+
+    return model
+
+
 # Custom scorer function to calculate adjusted R^2
 def adjusted_r2_scorer(estimator, X, y):
-    print(X)
-    print(y)
-    print(estimator.predict(X))
     r2 = r2_score(y, estimator.predict(X))
     n = X.shape[0]
     p = X.shape[1]
@@ -142,26 +176,59 @@ def adjusted_r2_scorer(estimator, X, y):
     return adjusted_r2
 
 
-def hypertune_model(X_train_pca, y_train, seed):
-    # Make a adj-r^2 scorer from the custom scorer function:
-    # adjusted_r2 = make_scorer(adjusted_r2_scorer, greater_is_better=True)
+def hypertune_model_xgb(X_train_pca, y_train, seed):
 
-    model = RandomForestRegressor(random_state=seed)
+    # Convert training data to DMatrix format
+    # dtrain = xgb.DMatrix(X_train_pca, label=y_train)
+
+    model = xgb.XGBRegressor(random_state=seed,
+                             tree_method="hist",
+                             device='cuda',
+                             verbosity=2)
 
     param_grid = {
-        'n_estimators': [100, 500, 1000, 1500, 2000],
-        'max_depth': [None, 10, 20, 30, 40, 50],
-        'min_samples_split': [2, 5, 10, 15, 20],
-        'min_samples_leaf': [1, 2, 4, 6, 8],
-        'max_features': ['sqrt', 'log2', None],
-        'bootstrap': [True, False],
-        'max_leaf_nodes': [None, 2, 5, 10, 15, 20]
+        # 'learning_rate': [0.01, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+        # 'min_child_weight': [1, 2, 5, 10],
+        # 'subsample': [0.6, 0.8, 1.0],
+        # 'colsample_bytree': [0.6, 0.8, 1.0],
+        # 'gamma': [0, 0.1, 0.3, 0.5, 1.0],
+        # 'reg_alpha': [0, 0.01, 0.1, 1, 10],
+        # 'reg_lambda': [0, 0.01, 0.1, 1, 10],
+        'max_depth': [3, 6, 9, 12, 15, 20]
     }
 
-    grid_search = GridSearchCV(model, param_grid, verbose=3,
+    grid_search = GridSearchCV(model, param_grid, verbose=2,
                                cv=LeaveOneOut(), n_jobs=-1,
-                               scoring='neg_mean_squared_error',)
-                            
+                               scoring='neg_mean_squared_error')
+
+    grid_search.fit(X_train_pca, y_train)  # Fit GridSearchCV with dtrain
+
+    print(f"Best parameters found: {grid_search.best_params_}")
+    print(f"Best neg. mean squared error (MSE): {grid_search.best_score_:.4f}")
+
+    return grid_search.best_params_
+
+
+def hypertune_model_lightGBM(X_train_pca, y_train, seed):
+    model = lgb.LGBMRegressor(random_state=seed, num_threads=6,
+                              force_col_wise=True)
+
+    param_grid = {
+        'min_child_samples': [1, 2, 3, 4, 5],
+        'max_depth': [-1, 2, 3, 6, 9, 12],
+        'min_data_in_bin': [1, 2, 3, 4, 5],
+        'num_leaves': [2, 4, 7, 10, 18, 31],
+        'learning_rate': [0.01, 0.05, 0.1],
+        'subsample': [0.6, 0.7, 0.8, 1.0],
+        'colsample_bytree': [0.6, 0.7, 0.8, 1.0],
+        'reg_alpha': [0.0, 0.1, 0.5, 1.0],
+        'reg_lambda': [0.0, 0.1, 0.5, 1.0]
+    }
+
+    grid_search = GridSearchCV(model, param_grid, verbose=2,
+                               cv=LeaveOneOut(), n_jobs=-1,
+                               scoring='neg_mean_squared_error')
+
     grid_search.fit(X_train_pca, y_train)
 
     print(f"Best parameters found: {grid_search.best_params_}")
@@ -194,12 +261,13 @@ def correlationMatrix(data, target):
     correlation_matrix = data.corr()
     target_correlation = correlation_matrix[target].abs().sort_values(
         ascending=False
-        )
+    )
     print(target_correlation)
 
 
 # Features ranked via RFE
 def rfe(model, X_train, y_train, X):
+    from sklearn.feature_selection import RFE
     rfe = RFE(model, n_features_to_select=1)
     rfe.fit(X_train, y_train)
     ranked_features = sorted(zip(map(lambda x: round(x, 4), rfe.ranking_),
