@@ -214,15 +214,17 @@ def hypertune_model_lightGBM(X_train_pca, y_train, seed):
                               force_col_wise=True)
 
     param_grid = {
-        'min_child_samples': [1, 2, 3, 4, 5],
-        'max_depth': [-1, 2, 3, 6, 9, 12],
-        'min_data_in_bin': [1, 2, 3, 4, 5],
-        'num_leaves': [2, 4, 7, 10, 18, 31],
-        'learning_rate': [0.01, 0.05, 0.1],
-        'subsample': [0.6, 0.7, 0.8, 1.0],
-        'colsample_bytree': [0.6, 0.7, 0.8, 1.0],
-        'reg_alpha': [0.0, 0.1, 0.5, 1.0],
-        'reg_lambda': [0.0, 0.1, 0.5, 1.0]
+        'min_child_samples': [1],
+        'max_depth': [-1],
+        'min_data_in_bin': [2],
+        'n_estimators': [500],
+        'num_leaves': [8],
+        'learning_rate': [0.09],
+        'subsample': [0.8],
+        'subsample_freq': [6],
+        'colsample_bytree': [1.0],
+        'reg_alpha': [0.0],
+        'reg_lambda': [0.7]
     }
 
     grid_search = GridSearchCV(model, param_grid, verbose=2,
