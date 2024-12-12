@@ -34,9 +34,18 @@ def load_data_excludeCols(filepath, excludeCols):
 
 
 # Handle missing values in a DataFrame using imputation
-def meanImpute(df):
+def meanImpute(data):
+    # Separate numerical and categorical columns
+    numerical_cols = data.select_dtypes(include=['number']).columns  # Select numerical columns
+    categorical_cols = data.select_dtypes(exclude=['number']).columns  # Select non-numerical columns
+
+    # Mean imputation for numerical columns
+    numerical_data = data[numerical_cols]
     imputer = SimpleImputer(strategy='mean')
-    return pd.DataFrame(imputer.fit_transform(df), columns=df.columns)
+    imputed_numerical_data = pd.DataFrame(imputer.fit_transform(numerical_data), columns=numerical_cols)
+
+    # Combine the imputed numerical data with the categorical data
+    return pd.concat([imputed_numerical_data, data[categorical_cols].reset_index(drop=True)], axis=1)
 
 
 # Define features and target
@@ -161,7 +170,7 @@ def hypertune_model(X_train_pca, y_train, seed):
     grid_search = GridSearchCV(model, param_grid, verbose=3,
                                cv=LeaveOneOut(), n_jobs=-1,
                                scoring='neg_mean_squared_error',)
-                            
+
     grid_search.fit(X_train_pca, y_train)
 
     print(f"Best parameters found: {grid_search.best_params_}")
